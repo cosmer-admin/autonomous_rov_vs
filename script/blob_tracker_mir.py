@@ -205,9 +205,9 @@ def cameracallback(image_data):
         flag_alert = True
         
     if (flag_alert == True ):
-        print "Alert Tracked points Lost"
+        print "Alert Tracked points Lost : Left click on the image to reset"
         position = (10,300) 
-        text = "Alert : Tracking failed !" 
+        text = "Alert : Tracking failed ! Left click" 
         cv2.putText(blobs,text,position,
                 cv2.FONT_HERSHEY_SIMPLEX, 0.8,(0, 0, 255, 255),2)
         
