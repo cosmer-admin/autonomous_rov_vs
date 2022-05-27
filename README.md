@@ -39,6 +39,12 @@ test it on a bag
 3. control the tracking 
   - right click on the image to update the desired points
   - left click on the image to initialise the tracked points and reset the desired point
+
+4. look at the topic : you should see two new topics : 
+  - /br5/tracked_points de type std_msgs/Float64MultiArray
+  - /br5/desired_points de type std_msgs/Float64MultiArray
+They are published by the node blob_tracker_mir.py. They contained the point position in the image in pixels : \[u1,v1,u2,v2,u3,v3,....,uN, vN\]
+They are listened in the node visual_servoing_mir.py.
  
 ### Real robot application
 You have to change the group name in the launch file to adapt it to your robot topic
