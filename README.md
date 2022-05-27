@@ -60,6 +60,4 @@ You have to change the group name in the launch file to adapt it to your robot t
    ```
    roslaunch autonomous_rov run_visual_servoing.launch
    ```
-4. control the tracking 
-  - right click on the image to update the desired points
-  - left click on the image to initialise the tracked points and reset the desired point
+4. see following steps of the install part
