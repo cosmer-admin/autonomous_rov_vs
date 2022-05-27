@@ -57,8 +57,7 @@ kdu = -0.01424
 
 
 
-def convert2meter(pt,u0,v0,lx,ly):
-    return (pt[0]-u0)/lx, (pt[1]-v0)/ly
+
     
 
 
@@ -348,16 +347,16 @@ def interactionMatrixFeaturePoint2D(x,y,Z=1):
 #list of points and list of Z
 def interactionMatrixFeaturePoint2DList(points, Zs):
     
-    N = np.shape(points)[0]
-    if(len(Zs)!=N):
-       Zs = np.ones(N)
+    n = int(np.shape(points)[0]/2)
+    if(len(Zs)!=n):
+       Zs = np.ones(n)
         
     iter = 0 
     L = [[]];
     # for all the points
-    for p in points:
-        Lp = interactionMatrixFeaturePoint2D(p.x,p.y,Zs[iter])
-        
+    point_reshaped = (np.array(points).reshape(n,2))
+    for p in point_reshaped:
+        Lp = interactionMatrixFeaturePoint2D(p[0],p[1],Zs[iter])
         if(iter == 0) : 
             L = Lp
         else: 
@@ -365,18 +364,55 @@ def interactionMatrixFeaturePoint2DList(points, Zs):
         iter += 1
     return L
 
+def convert2meter(pt,u0,v0,lx,ly):
+    return (pt[0]-u0)/lx, (pt[1]-v0)/ly
+
+def convertListPoint2meter (points):
+    global u0,v0,lx, ly
+    n = int(np.shape(points)[0]/2)
+    point_reshaped = (np.array(points).reshape(n,2))
+    point_meter = []
+    for pt in point_reshaped:
+        pt_meter = convert2meter(pt,u0,v0,lx,ly)
+        point_meter.append(pt_meter)
+    point_meter = np.array(point_meter).reshape(-1)
+    return point_meter
 
 def trackercallback(data):
     print "tracker ON"
     global desired_points
+    global n_points_vs
+    
     current_points = data.data
-    print "current_point", current_points
-    print "desired_point", desired_points
+    current_points_meter = convertListPoint2meter (current_points)
+    desired_points_meter = convertListPoint2meter (desired_points)
+    
+    error = np.array(current_points_meter)-np.array(desired_points_meter)
+    L = interactionMatrixFeaturePoint2DList(current_points_meter, np.array([1]))
+    
+    vcam = np.linalg.pinv(L).dot(error)
+    print(vcam)
+    
+    vel = Twist()
+    vel.angular.x = vcam[3]
+    vel.angular.y = vcam[4]
+    vel.angular.z = vcam[5]
+    pub_angular_velocity.publish(vel)
+    
+    Vel = Twist()
+    Vel.linear.x = vcam[0]
+    Vel.linear.y = vcam[1]
+    Vel.linear.z = vcam[2]
+    pub_linear_velocity.publish(Vel)
+    
+
+
     
 def desiredpointscallback(data):
-    print "desired point callback"
+    #print "desired point callback"
     global desired_points
     desired_points = data.data
+    
     
     #print (data.data)
     #enable_vs = 1
@@ -420,6 +456,7 @@ if __name__ == '__main__':
     pub_msg_override = rospy.Publisher("mavros/rc/override", OverrideRCIn, queue_size= 10, tcp_nodelay = True)
     pub_angular_velocity = rospy.Publisher('angular_velocity', Twist, queue_size = 10, tcp_nodelay = True)
     pub_linear_velocity = rospy.Publisher('linear_velocity', Twist, queue_size = 10, tcp_nodelay = True)
+
     
     subscriber()
 
