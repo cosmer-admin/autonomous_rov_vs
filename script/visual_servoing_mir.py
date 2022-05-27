@@ -390,7 +390,7 @@ def trackercallback(data):
     error = np.array(current_points_meter)-np.array(desired_points_meter)
     L = interactionMatrixFeaturePoint2DList(current_points_meter, np.array([1]))
     
-    vcam = np.linalg.pinv(L).dot(error)
+    vcam = -lambda_vs * np.linalg.pinv(L).dot(error)
     print(vcam)
     
     vel = Twist()
