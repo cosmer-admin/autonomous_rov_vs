@@ -37,12 +37,15 @@ global enable_vs
 global init_p0
 global depth_p0
 global depth_wrt_startup
-global previous_points
+global desired_points
 global vcam_vs
 global lambda_vs
 global n_points_vs
 
+# visual servoing
+lambda_vs = 0.5
 n_points_vs = 8
+desired_points = [0]
 
 #camera parameters
 u0 = 341
@@ -365,6 +368,15 @@ def interactionMatrixFeaturePoint2DList(points, Zs):
 
 def trackercallback(data):
     print "tracker ON"
+    global desired_points
+    current_points = data.data
+    print "current_point", current_points
+    print "desired_point", desired_points
+    
+def desiredpointscallback(data):
+    print "desired point callback"
+    global desired_points
+    desired_points = data.data
     
     #print (data.data)
     #enable_vs = 1
@@ -396,7 +408,7 @@ def subscriber():
     
     #camera
     rospy.Subscriber("tracked_points",Float64MultiArray,trackercallback, queue_size=1)
-  
+    rospy.Subscriber("desired_points",Float64MultiArray,desiredpointscallback, queue_size=1)
     rospy.spin()  # Execute subscriber in loop
 
 

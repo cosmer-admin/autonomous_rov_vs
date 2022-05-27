@@ -201,7 +201,7 @@ def cameracallback(image_data):
     overlay_points(blobs,ordered_points,0,255,0,0.5,5,0)
     overlay_points(blobs,desired_points,255,0,0,0.5,5,0)
 
-    if( np.linalg.norm(np.array(previous_points)-np.array(ordered_points)) > 30):
+    if( np.linalg.norm(np.array(previous_points)-np.array(ordered_points)) > 80):
         flag_alert = True
         
     if (flag_alert == True ):
@@ -236,7 +236,8 @@ def cameracallback(image_data):
             reset_desired_points = False
             print ("desired_points updated")
         pub_tracked_point.publish(current_point_msg)
-        desired_points_msg = Float64MultiArray(data = desired_points)
+        desired_points_reshaped = np.array(desired_points).reshape(-1)
+        desired_points_msg = Float64MultiArray(data = desired_points_reshaped)
         pub_desired_point.publish(desired_points_msg)
         
 
