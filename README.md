@@ -51,7 +51,14 @@ The tracking is monitored by clicking in the image.
   - Right click on the image to update the desired points
   - Left click on the image to initialise the tracked points and reset the desired point
 
+![Tracking ok  : current tracked points are in green, desired points are in red](images/trackingok.png)
+
 If there is a too big shift between to successive detection, the algorithm launch a warning and the publisher stops until you click on the image to reset the desired and tracked point.
+
+
+![Tracking failed : you have to LEFT click to reinit the tracking](images/trackingko.png)
+
+
 
 4. look at the topic : you should see two new topics : 
   - /br5/tracked_points de type std_msgs/Float64MultiArray
