@@ -53,7 +53,7 @@ The tracking is monitored by clicking in the image.
 
 ![Tracking ok  : current tracked points are in green, desired points are in red](images/trackingok.png)
 
-If there is a too big shift between to successive detection, the algorithm launch a warning and the publisher stops until you click on the image to reset the desired and tracked point.
+If there is too much offset between two successive detections, the algorithm issues a warning and the editor stops until you click on the image to reset the desired point and track.
 
 
 ![Tracking failed : you have to LEFT click to reinit the tracking](images/trackinko.png)
