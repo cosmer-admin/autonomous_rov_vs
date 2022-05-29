@@ -36,15 +36,30 @@ test it on a bag
    roslaunch autonomous_rov run_visual_servoing.launch
    ```
  
-3. control the tracking 
-  - right click on the image to update the desired points
-  - left click on the image to initialise the tracked points and reset the desired point
+3. points tracking monitoring
+
+The image displays 
+  - the current tracked points in green 
+  - the desired point in red that will be used in visual servoing
+
+The order of the points is set at the begining of the tracking algorithm depending on the first point detected by the algorithm.
+
+Tracked point and desired point might be ordered identically.
+That is why when you reset the tracking, the desired points are also tracked. 
+
+The tracking is monitored by clicking in the image.
+  - Right click on the image to update the desired points
+  - Left click on the image to initialise the tracked points and reset the desired point
+
+If there is a too big shift between to successive detection, the algorithm launch a warning and the publisher stops until you click on the image to reset the desired and tracked point.
 
 4. look at the topic : you should see two new topics : 
   - /br5/tracked_points de type std_msgs/Float64MultiArray
   - /br5/desired_points de type std_msgs/Float64MultiArray
 They are published by the node blob_tracker_mir.py. They contained the point position in the image in pixels : \[u1,v1,u2,v2,u3,v3,....,uN, vN\]
 They are listened in the node visual_servoing_mir.py.
+ 
+ 
  
 ### Real robot application
 You have to change the group name in the launch file to adapt it to your robot topic
