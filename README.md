@@ -56,7 +56,7 @@ The tracking is monitored by clicking in the image.
 If there is a too big shift between to successive detection, the algorithm launch a warning and the publisher stops until you click on the image to reset the desired and tracked point.
 
 
-![Tracking failed : you have to LEFT click to reinit the tracking](images/trackingko.png)
+![Tracking failed : you have to LEFT click to reinit the tracking](images/trackinko.png)
 
 
 
