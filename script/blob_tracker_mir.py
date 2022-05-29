@@ -171,14 +171,8 @@ def cameracallback(image_data):
     cv2.putText(blobs,text,position,
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255, 255, 255, 255),1)
     
-    position = (10,410)
-    text = "Green points = current tracked points"
-    cv2.putText(blobs,text,position,
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255, 255),1)
-    position = (10,430)
-    text = "Red points = desired points"
-    cv2.putText(blobs,text,position,
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 255, 0, 255),1)
+    
+
     
     
     # build the 2D points
@@ -207,18 +201,29 @@ def cameracallback(image_data):
     
     #overlay_points(blobs,current_points,200,100,100,0.5,5,-5)
     #overlay_points(blobs,previous_points,0,255,255,0.5,-5,0)
-    overlay_points(blobs,ordered_points,0,255,0,0.5,5,0)
-    overlay_points(blobs,desired_points,255,0,0,0.5,5,0)
+    if(flag_alert==False):
+        overlay_points(blobs,ordered_points,0,255,0,0.5,5,0)
+        overlay_points(blobs,desired_points,255,0,0,0.5,5,0)
+        position = (10,410)
+        text = "Green points = current tracked points"
+        cv2.putText(blobs,text,position,
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255, 255),1)
+        position = (10,430)
+        text = "Red points = desired points"
+        cv2.putText(blobs,text,position,
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 255, 0, 255),1)
 
     if( np.linalg.norm(np.array(previous_points)-np.array(ordered_points)) > 80):
         flag_alert = True
         
     if (flag_alert == True ):
-        print "Alert Tracked points Lost : Left click on the image to reset"
-        position = (10,300) 
-        text = "Alert : Tracking failed ! Left click to reset tracking points" 
+        print "Alert ! Tracking failed ! Left click to reset tracking points"
+        position = (10,410) 
+        text = "Alert ! Tracking failed ! Left click to reset tracking points" 
         cv2.putText(blobs,text,position,
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6,(0, 0, 255, 255),2)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255, 255),1)
+        overlay_points(blobs,ordered_points,100,100,100,0.5,5,0)
+        overlay_points(blobs,desired_points,100,100,100,0.5,5,0)
         
         
     cv2.namedWindow("image")

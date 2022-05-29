@@ -21,6 +21,7 @@ from sensor_msgs.msg import FluidPressure
 from sensor_msgs.msg import LaserScan
 from mavros_msgs.srv import CommandLong
 from geometry_msgs.msg import Twist
+from scipy.spatial.transform import Rotation as R
 
 
 ###---- Visual Tracking and Servoing----
@@ -45,7 +46,7 @@ global n_points_vs
 # visual servoing
 lambda_vs = 0.5
 n_points_vs = 8
-desired_points = [0]
+desired_points = []
 
 #camera parameters
 u0 = 341
@@ -55,31 +56,6 @@ ly = 455
 kud =0.00683 
 kdu = -0.01424 
 
-
-
-
-    
-
-
-global desired_points2D
-#defined desired points 
-#desired_points2D = [Point2D(-0.243369710525,-0.418902983183),
-                  #Point2D(-0.0143862444929,-0.429675544624),
-                  #Point2D(-0.096243540171,-0.352463371199),
-                  #Point2D(-0.237090345635,-0.291995145385),
-                  #Point2D(-0.156886982784,-0.189359449174),
-                  #Point2D(-0.00989097068426,-0.148452126201),
-                  #Point2D(-0.00165708972955,-0.0341907266445),
-                  #Point2D(-0.224742039631,-0.0227008870907)]
-
-desired_points2D = [Point2D(-0.243369710525,-0.418902983183),
-                  Point2D(-0.0143862444929,-0.429675544624),
-                  Point2D(-0.096243540171,-0.352463371199),
-                  Point2D(-0.237090345635,-0.291995145385),
-                  Point2D(-0.156886982784,-0.189359449174),
-                  Point2D(-0.00989097068426,-0.148452126201),
-                  Point2D(-0.00165708972955,-0.0341907266445),
-                  Point2D(-0.224742039631,-0.0227008870907)]
     
 vcam_vs = np.array([0,0,0,0,0,0])
 lambda_vs = 0.5
@@ -369,19 +345,48 @@ def convert2meter(pt,u0,v0,lx,ly):
 
 def convertListPoint2meter (points):
     global u0,v0,lx, ly
-    n = int(np.shape(points)[0]/2)
-    point_reshaped = (np.array(points).reshape(n,2))
-    point_meter = []
-    for pt in point_reshaped:
-        pt_meter = convert2meter(pt,u0,v0,lx,ly)
-        point_meter.append(pt_meter)
-    point_meter = np.array(point_meter).reshape(-1)
-    return point_meter
+    
+    if(np.shape(points)[0] > 1):
+        n = int(np.shape(points)[0]/2)
+        point_reshaped = (np.array(points).reshape(n,2))
+        point_meter = []
+        for pt in point_reshaped:
+            pt_meter = convert2meter(pt,u0,v0,lx,ly)
+            point_meter.append(pt_meter)
+        point_meter = np.array(point_meter).reshape(-1)
+        return point_meter
+
+
+# define the transformations from one frame c to frameo
+def homogenousMatrix(tx,ty,tz,rx,ry,rz):
+    cRo = R.from_euler('XYZ',[rx,ry,rz], degree=True).as_matrix()
+    cTo = np.array([[tx,ty,tz]])
+    M = np.stack([
+        np.hstack([cRo,cTo]),
+        [0,0,0,1]
+        ])
+    return M
+
+# skew a 3x1 vector in a matrix
+def skew (vec):
+    return np.array([[0,-vec[2], vec[1]],[vec[2],0-vec[0]],-vec[1], vec[0], 0])
+
+
+# expressed a velocity in frame a knowing velocity in b an
+# change of frame aMb
+def velocityTwistMatrix(tx,ty,tz,rx,ry,rz):
+    aRb = R.from_euler('XYZ',[rx,ry,rz], degree =True).as_matrix()
+    saTb  = skew(np.array([tx,ty,tz]))
+    aVb  = np.stack([aRb, saTb.dot(aRb)],[np.zeros(3,3),aRb])
+    return aVb
+
 
 def trackercallback(data):
     print "tracker ON"
     global desired_points
     global n_points_vs
+    
+    print'twist', velocityTwistMatrix(0,0,0,90,0,0)
     
     current_points = data.data
     current_points_meter = convertListPoint2meter (current_points)
