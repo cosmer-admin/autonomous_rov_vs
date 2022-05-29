@@ -163,13 +163,22 @@ def cameracallback(image_data):
     
     #display info
     position = (10,30)
-    text = "To reset Tracked and Desired point : LEFT click on the image" 
+    text = "LEFT click on the image : reset current tracked and desired points. " 
     cv2.putText(blobs,text,position,
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255, 255, 255, 255),1) 
     position = (10,60)
-    text = "To reset Desired point only : RIGHT click on the image"
+    text = "RIGHT click on the image : reset desired point ONLY."
     cv2.putText(blobs,text,position,
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255, 255, 255, 255),1)
+    
+    position = (10,410)
+    text = "Green points = current tracked points"
+    cv2.putText(blobs,text,position,
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255, 255),1)
+    position = (10,430)
+    text = "Red points = desired points"
+    cv2.putText(blobs,text,position,
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 255, 0, 255),1)
     
     
     # build the 2D points
@@ -207,9 +216,9 @@ def cameracallback(image_data):
     if (flag_alert == True ):
         print "Alert Tracked points Lost : Left click on the image to reset"
         position = (10,300) 
-        text = "Alert : Tracking failed ! Left click" 
+        text = "Alert : Tracking failed ! Left click to reset tracking points" 
         cv2.putText(blobs,text,position,
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8,(0, 0, 255, 255),2)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6,(0, 0, 255, 255),2)
         
         
     cv2.namedWindow("image")
