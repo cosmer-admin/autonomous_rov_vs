@@ -64,13 +64,17 @@ They are published by the node blob_tracker_mir.py. They contained the point pos
 They are listened in the node visual_servoing_mir.py.
 
 
-### Points tracking monitoring
+### Points tracking 
+
+This part is based on the simple blob tracker of open CV : [Find code and exaplanation here]([https://pages.github.com/](https://learnopencv.com/blob-detection-using-opencv-python-c/))
+It detects and unicolor dots in an image and return their center in pixels.
+
 
 The image displays 
   - the current tracked points in green 
   - the desired point in red that will be used in visual servoing
 
-The order of the points is set at the begining of the tracking algorithm depending on the first point detected by the algorithm.
+The order of the points is set at the beginning of the tracking algorithm according to the first point detected by the algorithm.
 
 Tracked point and desired point might be ordered identically.
 That is why when you reset the tracking, the desired points are also tracked. 
