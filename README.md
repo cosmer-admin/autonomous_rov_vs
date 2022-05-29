@@ -29,8 +29,9 @@ source your catkin workspace :
   ```
   source devel/setup.bash
   ```
-  
-test it on a bag
+### Test 
+
+#### test it on a bag
 1. open a new terminal and run the bag testtracking.bag with loop option so that it never stops publishing
   ```
   cd ~/catkin_w/src/autonomous_rov/bags
@@ -41,14 +42,45 @@ test it on a bag
    ```
    roslaunch autonomous_rov run_visual_servoing.launch
    ```
+   
+3. look at the topic : you should see two new topics : 
+  - /br5/tracked_points de type std_msgs/Float64MultiArray
+  - /br5/desired_points de type std_msgs/Float64MultiArray
+They are published by the node blob_tracker_mir.py. They contained the point position in the image in pixels : \[u1,v1,u2,v2,u3,v3,....,uN, vN\]
+They are listened in the node visual_servoing_mir.py.
  
-3. points tracking monitoring
+#### Real robot application
+You have to change the group name in the launch file to adapt it to your robot topic
+1. Open the file run_visual_servoing_launch
+```
+  gedit ~/catkin_ws/src/autonomous_rov/launch/run_visual_servoing.launch
+ ``` 
+2. Change Line 11 with your rov number. Replace br5 with br1 , br2 , br3 or br4 ...
+  ```
+  line 11 <group ns="br5">
+```
+3. run the launch file
+   ```
+   roslaunch autonomous_rov run_visual_servoing.launch
+   ```
+4. 3. look at the topic : you should see two new topics : 
+  - /br5/tracked_points de type std_msgs/Float64MultiArray
+  - /br5/desired_points de type std_msgs/Float64MultiArray
+They are published by the node blob_tracker_mir.py. They contained the point position in the image in pixels : \[u1,v1,u2,v2,u3,v3,....,uN, vN\]
+They are listened in the node visual_servoing_mir.py.
+
+
+### Points tracking 
+
+This part is based on the simple blob tracker of open CV : [Find code and exaplanation here]([https://pages.github.com/](https://learnopencv.com/blob-detection-using-opencv-python-c/))
+It detects and unicolor dots in an image and return their center in pixels.
+
 
 The image displays 
   - the current tracked points in green 
   - the desired point in red that will be used in visual servoing
 
-The order of the points is set at the begining of the tracking algorithm depending on the first point detected by the algorithm.
+The order of the points is set at the beginning of the tracking algorithm according to the first point detected by the algorithm.
 
 Tracked point and desired point might be ordered identically.
 That is why when you reset the tracking, the desired points are also tracked. 
@@ -66,26 +98,8 @@ If there is too much offset between two successive detections, the algorithm iss
 
 
 
-4. look at the topic : you should see two new topics : 
-  - /br5/tracked_points de type std_msgs/Float64MultiArray
-  - /br5/desired_points de type std_msgs/Float64MultiArray
-They are published by the node blob_tracker_mir.py. They contained the point position in the image in pixels : \[u1,v1,u2,v2,u3,v3,....,uN, vN\]
-They are listened in the node visual_servoing_mir.py.
+
  
  
  
-### Real robot application
-You have to change the group name in the launch file to adapt it to your robot topic
-1. Open the file run_visual_servoing_launch
-```
-  gedit ~/catkin_ws/src/autonomous_rov/launch/run_visual_servoing.launch
- ``` 
-2. Change Line 11 with your rov number. Replace br5 with br1 , br2 , br3 or br4 ...
-  ```
-  line 11 <group ns="br5">
-```
-3. run the launch file
-   ```
-   roslaunch autonomous_rov run_visual_servoing.launch
-   ```
-4. see following steps of the install part
+
