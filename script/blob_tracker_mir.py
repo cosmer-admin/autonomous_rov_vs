@@ -217,7 +217,7 @@ def cameracallback(image_data):
         flag_alert = True
         
     if (flag_alert == True ):
-        print "Alert ! Tracking failed ! Left click to reset tracking points"
+        #print "Alert ! Tracking failed ! Left click to reset tracking points"
         position = (10,410) 
         text = "Alert ! Tracking failed ! Left click to reset tracking points" 
         cv2.putText(blobs,text,position,
@@ -244,7 +244,7 @@ def cameracallback(image_data):
     #rospy.loginfo(current_point_msg)
 
     if(np.shape(ordered_points)[0] == n_points and flag_alert==False):
-        print "publish points"
+       # print "publish points"
         if(reset_desired_points) : 
             desired_points = ordered_points
             reset_desired_points = False
@@ -280,7 +280,10 @@ def subscriber():
 
 if __name__ == '__main__':
 
-    rospy.init_node('blob_tracker_mir', anonymous=False)    
+    rospy.init_node('blob_tracker_mir', anonymous=False)  
+    
+    print 'tracker launched'
+    
     pub_tracked_point = rospy.Publisher("tracked_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)
     pub_desired_point = rospy.Publisher("desired_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)
     subscriber()

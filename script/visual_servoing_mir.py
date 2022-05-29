@@ -21,12 +21,11 @@ from sensor_msgs.msg import FluidPressure
 from sensor_msgs.msg import LaserScan
 from mavros_msgs.srv import CommandLong
 from geometry_msgs.msg import Twist
-from scipy.spatial.transform import Rotation as R
 
 
 ###---- Visual Tracking and Servoing----
-from Point2D import Point2D
-
+from transform import velocityTwistMatrix
+import visual_servoing as vs
 
 import time
 import sys
@@ -34,19 +33,21 @@ import argparse
 
 # ---------- Global Variables ---------------
 global enable_depth
-global enable_vs
 global init_p0
 global depth_p0
 global depth_wrt_startup
+
+# visual servoing
 global desired_points
 global vcam_vs
 global lambda_vs
 global n_points_vs
 
-# visual servoing
+vcam_vs = np.array([0,0,0,0,0,0])
 lambda_vs = 0.5
 n_points_vs = 8
 desired_points = []
+enable_vs = 0   # set to tracker status
 
 #camera parameters
 u0 = 341
@@ -55,12 +56,7 @@ lx = 455
 ly = 455
 kud =0.00683 
 kdu = -0.01424 
-
     
-vcam_vs = np.array([0,0,0,0,0,0])
-lambda_vs = 0.5
-
-
 set_mode = [0]*3
 Vmax_mot = 1900
 Vmin_mot = 1100
@@ -82,8 +78,7 @@ set_mode[1] = False  # Mode automatic without correction
 set_mode[2] = False  # Mode with correction
 
 enable_depth = False 
-enable_vs = 0   # set to tracker status
-enable_ping = True 
+enable_ping = False 
 pinger_confidence = 0
 pinger_distance = 0
 
@@ -95,6 +90,64 @@ w = 0               # linear heave velocity
 p = 0               # angular roll velocity
 q = 0               # angular pitch velocity 
 r = 0               # angular heave velocity 
+
+
+
+def trackercallback(data):
+    print "---tracker ON-----"
+    global desired_points
+    global n_points_vs
+    
+    
+    current_points = data.data
+    current_points_meter = vs.convertListPoint2meter (current_points)
+    desired_points_meter = vs.convertListPoint2meter (desired_points)
+    
+    error = np.array(current_points_meter)-np.array(desired_points_meter)
+    L = vs.interactionMatrixFeaturePoint2DList(current_points_meter, np.array([1]))
+    
+    vcam_vs = -lambda_vs * np.linalg.pinv(L).dot(error)
+    print"velocity in camera frame",  vcam
+    
+    # robot                 camera 
+    #                    |
+    #    ------> x       |  -----> z
+    #    |               |  |
+    #    |               |  |
+    #    v z             |  v y
+    #                    |
+    
+    # deduce relative position
+    rtc = np.array([0, 0, 0])
+    rrc = np.array([90,90,0])
+    rVc = velocityTwistMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2])
+    
+    print 'Visual servoing : vcam =', vcam_vs
+    
+    vrobot = rVc.dot(vcam_vs)
+    
+    print 'Then vrobot = rVc * vcam = ', vrobot
+    
+    #vel = Twist()
+    #vel.angular.x = vrobot[3]
+    #vel.angular.y = vrobot[4]
+    #vel.angular.z = vrobot[5]
+    #pub_angular_velocity.publish(vel)
+    
+    Vel = Twist()
+    Vel.linear.x = vrobot[0]
+    Vel.linear.y = vrobot[1]
+    Vel.linear.z = vrobot[2]
+    pub_linear_velocity.publish(Vel)
+    
+
+
+    
+def desiredpointscallback(data):
+    #print "desired point callback"
+    global desired_points
+    desired_points = data.data
+    
 
 
 
@@ -180,6 +233,19 @@ def velCallback(cmd_vel):
                     yaw_left_right, forward_reverse, lateral_left_right)
 
 
+
+def pingerCallback(data):
+    global pinger_confidence
+    global pinger_distance
+
+    if enable_ping == True : 
+       pinger_distance = data.data[0]
+       pinger_confidence = data.data[1]
+       
+
+
+
+
 def OdoCallback(data):
     global angle_roll_a0
     global angle_pitch_a0
@@ -232,6 +298,72 @@ def OdoCallback(data):
     vel.angular.z = r
     pub_angular_velocity.publish(vel)
 
+
+
+def DvlCallback(data):
+    global set_mode
+    global custom_PI
+    global u
+    global v
+    global w
+  
+    u = data.velocity.x  # Linear surge velocity 
+    v = data.velocity.y  # Linear sway velocity
+    w = data.velocity.z  # Linear heave velocity
+
+    Vel = Twist()
+    Vel.linear.x = u
+    Vel.linear.y = v
+    Vel.linear.z = w
+    pub_linear_velocity.publish(Vel)
+    
+#-------------------------Control------------------------------
+    #if(custom_PI):.........................
+      
+    if (set_mode[0]):
+        return
+    elif (set_mode[1]):
+        # Only continue if automatic_mode is enabled
+        # Define an arbitrary velocity command and observe robot's velocity
+        #setOverrideRCIN ( Pitch , Roll , Heave , Yaw ,Surge, Sway)
+        setOverrideRCIN(1500, 1500, 1700, 1500, 1500, 1500)
+        return
+
+
+
+
+
+
+def PressureCallback(data):
+    global depth_p0
+    global depth_wrt_startup
+    global init_p0
+    global enable_depth
+  
+ 
+    if(enable_depth):
+        pressure = data.fluid_pressure
+
+        if (init_p0):
+            # 1st execution, init
+            depth_p0 = (pressure - 101300)/(rho* gravity)
+            init_p0 = False 
+        depth_wrt_startup = (pressure - 101300)/(rho * gravity) - depth_p0
+
+        # publish depth_wrt_startup data
+        msg = Float64()
+        msg.data = depth_wrt_startup
+        pub_depth.publish(msg)
+
+    # Only continue if manual_mode is disabled
+    if (set_mode[0]):
+        return
+    elif (set_mode[1]):
+        # Only continue if automatic_mode is enabled
+        # Define an arbitrary velocity command and observe robot's velocity
+        #setOverrideRCIN ( Pitch , Roll , Heave , Yaw ,Surge, Sway)
+        setOverrideRCIN(1500, 1500, 1700, 1500, 1500, 1500)
+        return
 
 
 def mapValueScalSat(value):
@@ -289,164 +421,14 @@ def PWM_Cmd(thrust_req):
     if PWM < Vmin_mot:
         PWM = Vmin_mot
 
-    return PWM
-
-
-
-    
-
-    
-
-def computeError(desired_points, current_points):
-    error = []
-    if(np.shape(desired_points)==np.shape(current_points)):
-        i = 0
-        for point in current_points:
-            error.append(desired_points[i].x- point.x)
-            error.append(desired_points[i].y- point.y) 
-            i = i + 1
-    else :
-        print("error current point and desired point vector not of the same dim")
-        error = 0
-    return error
-    
-    
-    
-        
-def interactionMatrixFeaturePoint2D(x,y,Z=1):
-    Lx = np.array([ -1 / Z, 0, x / Z, x * y,-(1 + x * x), y])
-    Ly = np.array([0, -1 / Z, y / Z, 1 + y * y, -x * y, -x ])
-    L = np.stack((Lx.T,Ly.T),axis=0)
-    return L
-
-
-#list of points and list of Z
-def interactionMatrixFeaturePoint2DList(points, Zs):
-    
-    n = int(np.shape(points)[0]/2)
-    if(len(Zs)!=n):
-       Zs = np.ones(n)
-        
-    iter = 0 
-    L = [[]];
-    # for all the points
-    point_reshaped = (np.array(points).reshape(n,2))
-    for p in point_reshaped:
-        Lp = interactionMatrixFeaturePoint2D(p[0],p[1],Zs[iter])
-        if(iter == 0) : 
-            L = Lp
-        else: 
-            L = np.concatenate((L,Lp))
-        iter += 1
-    return L
-
-def convert2meter(pt,u0,v0,lx,ly):
-    return (pt[0]-u0)/lx, (pt[1]-v0)/ly
-
-def convertListPoint2meter (points):
-    global u0,v0,lx, ly
-    
-    if(np.shape(points)[0] > 1):
-        n = int(np.shape(points)[0]/2)
-        point_reshaped = (np.array(points).reshape(n,2))
-        point_meter = []
-        for pt in point_reshaped:
-            pt_meter = convert2meter(pt,u0,v0,lx,ly)
-            point_meter.append(pt_meter)
-        point_meter = np.array(point_meter).reshape(-1)
-        return point_meter
-
-
-# define the transformations from one frame c to frameo
-def homogenousMatrix(tx,ty,tz,rx,ry,rz):
-    cRo = R.from_euler('XYZ',[rx,ry,rz], degree=True).as_matrix()
-    cTo = np.array([[tx,ty,tz]])
-    M = np.stack([
-        np.hstack([cRo,cTo]),
-        [0,0,0,1]
-        ])
-    return M
-
-# skew a 3x1 vector in a matrix
-def skew (vec):
-    return np.array([[0,-vec[2], vec[1]],[vec[2],0-vec[0]],-vec[1], vec[0], 0])
-
-
-# expressed a velocity in frame a knowing velocity in b an
-# change of frame aMb
-def velocityTwistMatrix(tx,ty,tz,rx,ry,rz):
-    aRb = R.from_euler('XYZ',[rx,ry,rz], degree =True).as_matrix()
-    saTb  = skew(np.array([tx,ty,tz]))
-    aVb  = np.stack([aRb, saTb.dot(aRb)],[np.zeros(3,3),aRb])
-    return aVb
-
-
-def trackercallback(data):
-    print "tracker ON"
-    global desired_points
-    global n_points_vs
-    
-    print'twist', velocityTwistMatrix(0,0,0,90,0,0)
-    
-    current_points = data.data
-    current_points_meter = convertListPoint2meter (current_points)
-    desired_points_meter = convertListPoint2meter (desired_points)
-    
-    error = np.array(current_points_meter)-np.array(desired_points_meter)
-    L = interactionMatrixFeaturePoint2DList(current_points_meter, np.array([1]))
-    
-    vcam = -lambda_vs * np.linalg.pinv(L).dot(error)
-    print(vcam)
-    
-    vel = Twist()
-    vel.angular.x = vcam[3]
-    vel.angular.y = vcam[4]
-    vel.angular.z = vcam[5]
-    pub_angular_velocity.publish(vel)
-    
-    Vel = Twist()
-    Vel.linear.x = vcam[0]
-    Vel.linear.y = vcam[1]
-    Vel.linear.z = vcam[2]
-    pub_linear_velocity.publish(Vel)
-    
-
-
-    
-def desiredpointscallback(data):
-    #print "desired point callback"
-    global desired_points
-    desired_points = data.data
-    
-    
-    #print (data.data)
-    #enable_vs = 1
-    
-    #if(np.size(points.data)==n_points_vs):
-        #enable_vs = 1
-        #print("enable vs !!")
-    #else : 
-        #enable_vs = 0
-        #print("disable vs")
-    
-  
-    
-    #if(enable_vs ==1):
-        #print ("tracker ok")
-        
-        
-        #L_vs = interactionMatrixFeaturePoint2DList(current_points2D, np.array([1]))
-        #error_vs = computeError(desired_points2D, current_points2D)
-        
-        #vcam_vs = -lambda_vs* np.linalg.pinv(L_vs).dot(error_vs)
-        #print "vcam= ", vcam_vs.T
-        
+    return PWM        
     
 
 def subscriber():
-    rospy.Subscriber("joy", Joy, joyCallback)
-    rospy.Subscriber("cmd_vel", Twist, velCallback)
-    
+    #rospy.Subscriber("joy", Joy, joyCallback)
+    #rospy.Subscriber("cmd_vel", Twist, velCallback)
+    #rospy.Subscriber("mavros/imu/data", Imu, OdoCallback)
+    #rospy.Subscriber("mavros/imu/water_pressure", FluidPressure, PressureCallback)
     #camera
     rospy.Subscriber("tracked_points",Float64MultiArray,trackercallback, queue_size=1)
     rospy.Subscriber("desired_points",Float64MultiArray,desiredpointscallback, queue_size=1)
@@ -455,14 +437,16 @@ def subscriber():
 
 if __name__ == '__main__':
 
-    #armDisarm(False)  # Not automatically disarmed at startup
+    armDisarm(False)  # Not automatically disarmed at startup
     rospy.init_node('visual_servoing_mir', anonymous=False)
     print "visual servoing mir launched"
-    pub_msg_override = rospy.Publisher("mavros/rc/override", OverrideRCIn, queue_size= 10, tcp_nodelay = True)
+    #armDisarm(False)  # Not automatically disarmed at startup
+    #pub_msg_override = rospy.Publisher("mavros/rc/override", OverrideRCIn, queue_size = 10, tcp_nodelay = True)
+    #pub_angle_degre = rospy.Publisher('angle_degree', Twist, queue_size = 10, tcp_nodelay = True)
+    #pub_depth = rospy.Publisher('depth/state', Float64, queue_size = 10, tcp_nodelay = True)
+    
     pub_angular_velocity = rospy.Publisher('angular_velocity', Twist, queue_size = 10, tcp_nodelay = True)
     pub_linear_velocity = rospy.Publisher('linear_velocity', Twist, queue_size = 10, tcp_nodelay = True)
-
-    
     subscriber()
 
 

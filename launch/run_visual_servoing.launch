@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <launch>
-
   <!-- roscore automatically started by roslaunch -->
 
   <!-- start mavlink node -->
@@ -17,12 +16,9 @@
     <!-- start telexbox to convert joystick values into vel -->
     <node pkg="autonomous_rov" type="teleop_xbox" name="teleop_xbox" output="screen">
     </node>  
+    
+    <arg name="arg1" default="--device /dev/ttyUSB0"/>  
 
-     <!--<arg name="path" default="/home/dune/catkin_ws/src/autonomous_rov/bags/" />
-    <arg name="file_1" default="testtracking" />
-    <node pkg="rosbag" type="play" name="player" output="screen" args="-l clock $(arg path)$(arg file_1).bag"/>  -->
-    
-    
     <node respawn="true" pkg="autonomous_rov" type="blob_tracker_mir.py" name="blob_tracker_mir" output="screen" ></node>
     
     <node respawn="true" pkg="autonomous_rov" type="visual_servoing_mir.py" name="visual_servoing_mir" output="screen" ></node>
