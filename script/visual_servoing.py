@@ -3,9 +3,8 @@ import numpy as np
     
         
 def interactionMatrixFeaturePoint2D(x,y,Z=1):
-    Lx = np.array([ -1 / Z, 0, x / Z, x * y,-(1 + x * x), y])
-    Ly = np.array([0, -1 / Z, y / Z, 1 + y * y, -x * y, -x ])
-    L = np.stack((Lx.T,Ly.T),axis=0)
+    #TODO Mir Student : write the interaction matrix here
+    L = np.zeros(2,6)
     return L
 
 

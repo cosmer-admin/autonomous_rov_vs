@@ -117,9 +117,11 @@ def trackercallback(data):
     #    v z             |  v y
     #                    |
     
+    #TODO MIR STUDENT : set the relative cam_robot position
     # deduce relative position
     rtc = np.array([0, 0, 0])
-    rrc = np.array([90,90,0])
+    rrc = np.array([0,0,0])
+    
     rVc = velocityTwistMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2])
     
     print 'Visual servoing : vcam =', vcam_vs
@@ -128,17 +130,19 @@ def trackercallback(data):
     
     print 'Then vrobot = rVc * vcam = ', vrobot
     
+    
+    #TODO MIR STUDENT : publish if you dare !
     #vel = Twist()
     #vel.angular.x = vrobot[3]
     #vel.angular.y = vrobot[4]
     #vel.angular.z = vrobot[5]
     #pub_angular_velocity.publish(vel)
     
-    Vel = Twist()
-    Vel.linear.x = vrobot[0]
-    Vel.linear.y = vrobot[1]
-    Vel.linear.z = vrobot[2]
-    pub_linear_velocity.publish(Vel)
+    #Vel = Twist()
+    #Vel.linear.x = vrobot[0]
+    #Vel.linear.y = vrobot[1]
+    #Vel.linear.z = vrobot[2]
+    #pub_linear_velocity.publish(Vel)
     
 
 
