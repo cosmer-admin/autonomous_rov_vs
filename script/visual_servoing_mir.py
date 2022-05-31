@@ -157,7 +157,7 @@ def trackercallback(data):
         if (set_mode[2]):
            
             # Extract cmd_vel message
-            # FIXME be carreful of the sign it depends on your robot 
+            # FIXME be carreful of the sign may depends on your robot 
             roll_left_right = mapValueScalSat(vel.angular.x)
             yaw_left_right = mapValueScalSat(-vel.angular.z)
             ascend_descend = mapValueScalSat(vel.linear.z)
