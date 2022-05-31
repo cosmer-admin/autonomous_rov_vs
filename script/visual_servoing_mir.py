@@ -91,7 +91,7 @@ r = 0               # angular heave velocity
 
 
 def trackercallback(data):
-    print "---tracker ON-----"
+    #print "---tracker ON-----"
     global desired_points_vs
     global n_points_vs
     
@@ -109,8 +109,8 @@ def trackercallback(data):
         
         #compute error
         error_vs = np.array(current_points_meter)-np.array(desired_points_meter)
-        print ('Visual servoing : error (ex,ey)=')
-        print(error_vs.reshape(len(current_points)/2,2))
+       # print ('Visual servoing : error (ex,ey)=')
+       # print(error_vs.reshape(len(current_points)/2,2))
         #compute interaction matrix
         L = vs.interactionMatrixFeaturePoint2DList(current_points_meter, np.array([1]))
         
@@ -131,12 +131,12 @@ def trackercallback(data):
         rrc = np.array([0,90,90])
         rVc = velocityTwistMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2])
     
-        print( 'Visual servoing : vcam =', vcam_vs)
+        #print( 'Visual servoing : vcam =', vcam_vs)
         vrobot = rVc.dot(vcam_vs)
     
         #print( 'rVc', rVc)
         #print('rMc', homogenousMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2]))
-        print('Then vrobot = rVc * vcam = ', vrobot)
+        #print('Then vrobot = rVc * vcam = ', vrobot)
     
         #vrobot = np.array([0.1,0.1,0.1, 0.1,0.1,0.1])
         vel = Twist()
@@ -156,7 +156,7 @@ def trackercallback(data):
         pub_visual_servoing_err.publish(error_vs_msg)
         
         if (set_mode[2]):
-            print("launch the control")
+            print("A = launch the control")
             # Extract cmd_vel message
             # FIXME be carreful of the sign it depends on your robot 
             roll_left_right = mapValueScalSat(vel.angular.x)
@@ -166,20 +166,22 @@ def trackercallback(data):
             lateral_left_right = mapValueScalSat(-vel.linear.y)
             pitch_left_right = mapValueScalSat(vel.angular.y)
 
-            #setOverrideRCIN(pitch_left_right, roll_left_right, ascend_descend,
-            #        yaw_left_right, forward_reverse, lateral_left_right)
+            setOverrideRCIN(pitch_left_right, roll_left_right, ascend_descend,
+                    yaw_left_right, forward_reverse, lateral_left_right)
     
 
 
     
 def desiredpointscallback(data):
-    print "desired point callback"
+   # print "desired point callback"
     global desired_points_vs
     desired_points_vs = data.data
     
 
 
 def joyCallback(data):
+    
+    print ("joy callback") 
     global arming
     global set_mode
     global set_mode
@@ -390,7 +392,7 @@ def PressureCallback(data):
         # Only continue if automatic_mode is enabled
         # Define an arbitrary velocity command and observe robot's velocity
         #setOverrideRCIN ( Pitch , Roll , Heave , Yaw ,Surge, Sway)
-        setOverrideRCIN(1500, 1500, 1700, 1500, 1500, 1500)
+        setOverrideRCIN(1500, 1500, 1500, 1500, 1700, 1500)
         return
 
 
@@ -465,13 +467,13 @@ def subscriber():
 
 if __name__ == '__main__':
 
-    #armDisarm(False)  # Not automatically disarmed at startup
+    armDisarm(False)  # Not automatically disarmed at startup
     rospy.init_node('visual_servoing_mir', anonymous=False)
     print "visual servoing mir launched"
     #armDisarm(False)  # Not automatically disarmed at startup
-    #pub_msg_override = rospy.Publisher("mavros/rc/override", OverrideRCIn, queue_size = 10, tcp_nodelay = True)
-    #pub_angle_degre = rospy.Publisher('angle_degree', Twist, queue_size = 10, tcp_nodelay = True)
-    #pub_depth = rospy.Publisher('depth/state', Float64, queue_size = 10, tcp_nodelay = True)
+    pub_msg_override = rospy.Publisher("mavros/rc/override", OverrideRCIn, queue_size = 10, tcp_nodelay = True)
+    pub_angle_degre = rospy.Publisher('angle_degree', Twist, queue_size = 10, tcp_nodelay = True)
+    pub_depth = rospy.Publisher('depth/state', Float64, queue_size = 10, tcp_nodelay = True)
     
     pub_visual_servoing_vel = rospy.Publisher('visual_servoing_velocity', Twist, queue_size = 10, tcp_nodelay = True)
     pub_visual_servoing_err = rospy.Publisher("visual_servoing_error",Float64MultiArray,queue_size=1,tcp_nodelay = True)
