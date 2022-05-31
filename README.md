@@ -51,19 +51,23 @@ export ROS_HOSTNAME=127.0.0.1
 export ROS_IP=127.0.0.1
 
 1. open a new terminal and run the bag testtracking.bag with loop option so that it never stops publishing
-  ```
+
+```
   cd ~/catkin_w/src/autonomous_rov/bags
   rosbag play -l  testtracking.bag
-  ```
-  
+```
+
 3. open a terminal and run a roscore
+
 ```
    roslaunch autonomous_rov run_visual_servoing.launch
 ```
+
 4. open another terminal and run the launch file
 ```
    roslaunch autonomous_rov run_visual_servoing.launch
-   
+```
+
 5. look at the topic : you should see two new topics : 
   - /br5/tracked_points of type std_msgs/Float64MultiArray
   - /br5/desired_points of type std_msgs/Float64MultiArray
