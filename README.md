@@ -63,7 +63,7 @@ export ROS_IP=127.0.0.1
 4. open another terminal and run the launch file
 ```
    roslaunch autonomous_rov run_visual_servoing.launch
-   
+ ````
 5. look at the topic : you should see two new topics : 
   - /br5/tracked_points of type std_msgs/Float64MultiArray
   - /br5/desired_points of type std_msgs/Float64MultiArray
