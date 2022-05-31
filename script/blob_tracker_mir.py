@@ -62,10 +62,15 @@ kdu = -0.01424
 
 
 def order_point(previous_pts, current_pts):
-    ordered_pts = []
-    for ppt in previous_pts:
-        index = np.argmin(np.linalg.norm(current_pts - ppt, axis=1)) 
-        ordered_pts.append(current_pts[index])
+    
+    if(current_pts.shape[0]>0 and current_pts.shape[0]==previous_pts.shape[0]):
+        ordered_pts = []
+        for ppt in previous_pts:
+            index = np.argmin(np.linalg.norm(current_pts - ppt, axis=1)) 
+            ordered_pts.append(current_pts[index])
+    else :
+        ordered_pts = previous_pts
+        
     return ordered_pts
 
 
@@ -207,11 +212,11 @@ def cameracallback(image_data):
         position = (10,410)
         text = "Green points = current tracked points"
         cv2.putText(blobs,text,position,
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255, 255),1)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255, 255, 255, 255),1)
         position = (10,430)
         text = "Red points = desired points"
         cv2.putText(blobs,text,position,
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 255, 0, 255),1)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255, 255, 255, 255),1)
 
     if( np.linalg.norm(np.array(previous_points)-np.array(ordered_points)) > 80):
         flag_alert = True

@@ -4,6 +4,10 @@ from os import kill
 import string
 import numpy as np
 
+
+
+
+
 def rotXYZ(rx,ry,rz, degrees =True):
     if(degrees):
         rx *= math.pi/180
@@ -19,9 +23,26 @@ def rotXYZ(rx,ry,rz, degrees =True):
     
     rotz = np.array([[math.cos(rz),-math.sin(rz),0],
                      [math.sin(rz),math.cos(rz),0],
-                     [-math.sin(ry),0,math.cos(ry)]])
+                     [0,0,1]])
     rotxyz = rotx.dot(roty.dot(rotz))
+   # print('r',rotxyz)
+    rotxyz = np.round (rotxyz,15)
+    #print('round',rotxyz)
     return rotxyz
+
+def isRot (M, dec):
+    tag = False
+    I= np.identity(M.shape[0])
+    
+    print('cond1 M.MT=I',np.round (np.matmul(M, M.T)),dec)
+    print('cond2 np.linalg.det(M)',np.round(np.linalg.det(M),dec))
+    if (np.all(np.round( (np.matmul(M, M.T)),10) == I) and (np.round(np.linalg.det(M),dec)==1)): 
+        tag = True
+
+    return tag
+    
+    
+    
 
 # define the transformations from one frame c to frameo
 def homogenousMatrix(tx,ty,tz,rx,ry,rz):
@@ -30,7 +51,6 @@ def homogenousMatrix(tx,ty,tz,rx,ry,rz):
     M = np.concatenate(
         (np.concatenate((cRo,cTo.T), axis=1),
          np.array([[0,0,0,1]])),axis=0 )
-    print(M)
     return M
 
 # skew a 3x1 vector in a matrix

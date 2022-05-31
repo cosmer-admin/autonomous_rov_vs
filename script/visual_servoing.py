@@ -27,6 +27,16 @@ def interactionMatrixFeaturePoint2DList(points, Zs):
         iter += 1
     return L
 
+
+
+#camera parameters
+u0 = 341
+v0 = 258
+lx = 455
+ly = 455
+kud =0.00683 
+kdu = -0.01424 
+
 def convert2meter(pt,u0,v0,lx,ly):
     return (pt[0]-u0)/lx, (pt[1]-v0)/ly
 
