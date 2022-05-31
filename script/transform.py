@@ -25,9 +25,9 @@ def rotXYZ(rx,ry,rz, degrees =True):
                      [math.sin(rz),math.cos(rz),0],
                      [0,0,1]])
     rotxyz = rotx.dot(roty.dot(rotz))
-    print('r',rotxyz)
+   # print('r',rotxyz)
     rotxyz = np.round (rotxyz,15)
-    print('round',rotxyz)
+    #print('round',rotxyz)
     return rotxyz
 
 def isRot (M, dec):

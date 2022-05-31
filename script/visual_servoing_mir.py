@@ -96,51 +96,76 @@ def trackercallback(data):
     
     
     current_points = data.data
-    current_points_meter = vs.convertListPoint2meter (current_points)
-    desired_points_meter = vs.convertListPoint2meter (desired_points_vs)
     
-    error = np.array(current_points_meter)-np.array(desired_points_meter)
-    L = vs.interactionMatrixFeaturePoint2DList(current_points_meter, np.array([1]))
+    # if we have current_points of same size as desired_points
+    # then we can compute control law
+    if(len(current_points)>0 and 
+       len(desired_points_vs) == len(current_points)):
+        
+        #convert points to meters
+        current_points_meter = vs.convertListPoint2meter (current_points)
+        desired_points_meter = vs.convertListPoint2meter (desired_points_vs)
+        
+        #compute error
+        error_vs = np.array(current_points_meter)-np.array(desired_points_meter)
+        print 'Visual servoing : error =', error_vs
+        #compute interaction matrix
+        L = vs.interactionMatrixFeaturePoint2DList(current_points_meter, np.array([1]))
+        
+        #compute velocity
+        vcam_vs = -lambda_vs * np.linalg.pinv(L).dot(error_vs)
     
-    vcam_vs = -lambda_vs * np.linalg.pinv(L).dot(error)
-    #print"velocity in camera frame",  vcam
+        #print"velocity in camera frame",  vcam    
+        ## robot                 camera 
+        ##                    |
+        ##    ------> x       |  -----> z
+        ##    |               |  |
+        ##    |               |  |
+        ##    v z             |  v y
+        ##                    |
     
-    ## robot                 camera 
-    ##                    |
-    ##    ------> x       |  -----> z
-    ##    |               |  |
-    ##    |               |  |
-    ##    v z             |  v y
-    ##                    |
+        ## deduce relative position
+        rtc = np.array([0, 0, 0])
+        rrc = np.array([0,90,90])
+        rVc = velocityTwistMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2])
     
-    ## deduce relative position
-    rtc = np.array([0, 0, 0])
-    rrc = np.array([0,0,90])
-    rVc = velocityTwistMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2])
+        print 'Visual servoing : vcam =', vcam_vs
+        vrobot = rVc.dot(vcam_vs)
     
-    print 'Visual servoing : vcam =', vcam_vs
+        #print 'rVc', rVc
+        #print 'rMc', homogenousMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2])
+        print 'Then vrobot = rVc * vcam = ', vrobot
     
-    vrobot = rVc.dot(vcam_vs)
-    
-    #print 'rVc', rVc
-    #print 'rMc', homogenousMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2])
-    
-    
-    
-    print 'Then vrobot = rVc * vcam = ', vrobot
-    
-    #vrobot = np.array([0.1,0.1,0.1, 0.1,0.1,0.1])
-    vel = Twist()
-    vel.angular.x = vrobot[3]
-    vel.angular.y = vrobot[4]
-    vel.angular.z = vrobot[5]
-    pub_angular_velocity.publish(vel)
-    
-    Vel = Twist()
-    Vel.linear.x = vrobot[0]
-    Vel.linear.y = vrobot[1]
-    Vel.linear.z = vrobot[2]
-    pub_linear_velocity.publish(Vel)
+        #vrobot = np.array([0.1,0.1,0.1, 0.1,0.1,0.1])
+        vel = Twist()
+        vel.angular.x = vrobot[3]
+        vel.angular.y = vrobot[4]
+        vel.angular.z = vrobot[5]
+        vel.linear.x = vrobot[0]
+        vel.linear.y = vrobot[1]
+        vel.linear.z = vrobot[2]
+        
+        # publish the visual servoing celovity
+        pub_visual_servoing_vel.publish(vel)
+        
+        # publish the error
+        error_vs_reshaped = np.array(error_vs).reshape(1,16)
+        error_vs_msg = Float64MultiArray(data = error_vs)
+        pub_visual_servoing_err.publish(error_vs_msg)
+        
+        if (set_mode[2]):
+            print("launch the control")
+            # Extract cmd_vel message
+            # FIXME be carreful of the sign 
+            roll_left_right = mapValueScalSat(vel.angular.x)
+            yaw_left_right = mapValueScalSat(-vel.angular.z)
+            ascend_descend = mapValueScalSat(vel.linear.z)
+            forward_reverse = mapValueScalSat(vel.linear.x)
+            lateral_left_right = mapValueScalSat(-vel.linear.y)
+            pitch_left_right = mapValueScalSat(vel.angular.y)
+
+            #setOverrideRCIN(pitch_left_right, roll_left_right, ascend_descend,
+            #        yaw_left_right, forward_reverse, lateral_left_right)
     
 
 
@@ -197,6 +222,7 @@ def joyCallback(data):
 def armDisarm(armed):
     # This functions sends a long command service with 400 code to arm or disarm motors
     if (armed):
+        print "Armed wait for service mavros/cmd/command"
         rospy.wait_for_service('mavros/cmd/command')
         try:
             armService = rospy.ServiceProxy('mavros/cmd/command', CommandLong)
@@ -444,8 +470,14 @@ if __name__ == '__main__':
     #pub_msg_override = rospy.Publisher("mavros/rc/override", OverrideRCIn, queue_size = 10, tcp_nodelay = True)
     #pub_angle_degre = rospy.Publisher('angle_degree', Twist, queue_size = 10, tcp_nodelay = True)
     #pub_depth = rospy.Publisher('depth/state', Float64, queue_size = 10, tcp_nodelay = True)
+    
+    pub_visual_servoing_vel = rospy.Publisher('visual_servoing_velocity', Twist, queue_size = 10, tcp_nodelay = True)
+    pub_visual_servoing_err = rospy.Publisher("visual_servoing_error",Float64MultiArray,queue_size=1,tcp_nodelay = True)
+    
     pub_angular_velocity = rospy.Publisher('angular_velocity', Twist, queue_size = 10, tcp_nodelay = True)
+    
     pub_linear_velocity = rospy.Publisher('linear_velocity', Twist, queue_size = 10, tcp_nodelay = True)
+    
     subscriber()
 
 
