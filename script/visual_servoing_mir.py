@@ -115,7 +115,7 @@ def trackercallback(data):
         #compute velocity
         vcam_vs = -lambda_vs * np.linalg.pinv(L).dot(error_vs)
     
-        #print"velocity in camera frame",  vcam    
+        #print("velocity in camera frame",  vcam   ) 
         ## robot                 camera 
         ##                    |
         ##    ------> x       |  -----> z
@@ -129,12 +129,12 @@ def trackercallback(data):
         rrc = np.array([0,90,90])
         rVc = velocityTwistMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2])
     
-        print 'Visual servoing : vcam =', vcam_vs
+        print( 'Visual servoing : vcam =', vcam_vs)
         vrobot = rVc.dot(vcam_vs)
     
-        #print 'rVc', rVc
-        #print 'rMc', homogenousMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2])
-        print 'Then vrobot = rVc * vcam = ', vrobot
+        #print( 'rVc', rVc)
+        #print('rMc', homogenousMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2]))
+        print('Then vrobot = rVc * vcam = ', vrobot)
     
         #vrobot = np.array([0.1,0.1,0.1, 0.1,0.1,0.1])
         vel = Twist()
