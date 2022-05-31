@@ -91,11 +91,10 @@ r = 0               # angular heave velocity
 
 
 def trackercallback(data):
-    #print "---tracker ON-----"
     global desired_points_vs
     global n_points_vs
     
-    
+    # read the current tracked point
     current_points = data.data
     
     # if we have current_points of same size as desired_points
@@ -103,22 +102,27 @@ def trackercallback(data):
     if(len(current_points)>0 and 
        len(desired_points_vs) == len(current_points)):
         
-        #convert points to meters
+        #convert points from pixels to meters
         current_points_meter = cam.convertListPoint2meter (current_points)
         desired_points_meter = cam.convertListPoint2meter (desired_points_vs)
         
-        #compute error
-        error_vs = np.array(current_points_meter)-np.array(desired_points_meter)
-       # print ('Visual servoing : error (ex,ey)=')
-       # print(error_vs.reshape(len(current_points)/2,2))
-        #compute interaction matrix
-        L = vs.interactionMatrixFeaturePoint2DList(current_points_meter, np.array([1]))
+        #compute vs error
+        # error_vs = ......
+       
+        #compute interaction matrix in the FILE ./visual_servoig.py
+        L = vs.interactionMatrixFeaturePoint2DList(current_points_meter)
+        # TODO once it works with this matrix, change it for 
+        # 1. a rho tetha representation
+        # 2. a segment representation
         
-        #compute velocity
-        vcam_vs = -lambda_vs * np.linalg.pinv(L).dot(error_vs)
-    
-        #print("velocity in camera frame",  vcam   ) 
-        ## robot                 camera 
+        #init the camera velocity
+        vcam = np.array([0.0,0.0,0.0,0.0,0.0,0.0])
+        #TODO compute the velocity control law 
+        # vcam_vs = ......
+        
+        ## Find the relative robot/camera position
+        ## You can train in the file testTransform.py
+        ## robot frame        |  camera frame 
         ##                    |
         ##    ------> x       |  -----> z
         ##    |               |  |
@@ -126,19 +130,14 @@ def trackercallback(data):
         ##    v z             |  v y
         ##                    |
     
-        ## deduce relative position
-        rtc = np.array([0, 0, 0])
-        rrc = np.array([0,90,90])
-        rVc = velocityTwistMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2])
+        print( 'Visual servoing : vcam =', vcam_vs)
+        vrobot = np.array([0.0,0.0,0.0,0.0,0.0,0.0])
+        
+        ## TODO find the control velocity expressed in the robot frame
+        ## vrobot = .........(vcam_vs)
     
-        #print( 'Visual servoing : vcam =', vcam_vs)
-        vrobot = rVc.dot(vcam_vs)
+        print('Then vrobot =  ', vrobot)
     
-        #print( 'rVc', rVc)
-        #print('rMc', homogenousMatrix(rtc[0],rtc[1],rtc[2],rrc[0],rrc[1],rrc[2]))
-        #print('Then vrobot = rVc * vcam = ', vrobot)
-    
-        #vrobot = np.array([0.1,0.1,0.1, 0.1,0.1,0.1])
         vel = Twist()
         vel.angular.x = vrobot[3]
         vel.angular.y = vrobot[4]
@@ -146,8 +145,7 @@ def trackercallback(data):
         vel.linear.x = vrobot[0]
         vel.linear.y = vrobot[1]
         vel.linear.z = vrobot[2]
-        
-        # publish the visual servoing celovity
+        # publish the visual servoing velocity
         pub_visual_servoing_vel.publish(vel)
         
         # publish the error
@@ -155,8 +153,9 @@ def trackercallback(data):
         error_vs_msg = Float64MultiArray(data = error_vs)
         pub_visual_servoing_err.publish(error_vs_msg)
         
+        print("press A to launch the visual servoing control")
         if (set_mode[2]):
-            print("A = launch the control")
+           
             # Extract cmd_vel message
             # FIXME be carreful of the sign it depends on your robot 
             roll_left_right = mapValueScalSat(vel.angular.x)
@@ -473,7 +472,7 @@ if __name__ == '__main__':
     #armDisarm(False)  # Not automatically disarmed at startup
     pub_msg_override = rospy.Publisher("mavros/rc/override", OverrideRCIn, queue_size = 10, tcp_nodelay = True)
     pub_angle_degre = rospy.Publisher('angle_degree', Twist, queue_size = 10, tcp_nodelay = True)
-    pub_depth = rospy.Publisher('depth/state', Float64, queue_size = 10, tcp_nodelay = True)
+    pub_depth = rospy.Publisher('depth/state`', Float64, queue_size = 10, tcp_nodelay = True)
     
     pub_visual_servoing_vel = rospy.Publisher('visual_servoing_velocity', Twist, queue_size = 10, tcp_nodelay = True)
     pub_visual_servoing_err = rospy.Publisher("visual_servoing_error",Float64MultiArray,queue_size=1,tcp_nodelay = True)
