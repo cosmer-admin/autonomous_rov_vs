@@ -27,6 +27,7 @@ from geometry_msgs.msg import Twist
 from transform import velocityTwistMatrix
 from transform import homogenousMatrix
 import visual_servoing as vs
+import camera_parameters as cam
 
 import time
 import sys
@@ -103,19 +104,20 @@ def trackercallback(data):
        len(desired_points_vs) == len(current_points)):
         
         #convert points to meters
-        current_points_meter = vs.convertListPoint2meter (current_points)
-        desired_points_meter = vs.convertListPoint2meter (desired_points_vs)
+        current_points_meter = cam.convertListPoint2meter (current_points)
+        desired_points_meter = cam.convertListPoint2meter (desired_points_vs)
         
         #compute error
         error_vs = np.array(current_points_meter)-np.array(desired_points_meter)
-        print 'Visual servoing : error =', error_vs
+        print ('Visual servoing : error (ex,ey)=')
+        print(error_vs.reshape(len(current_points)/2,2))
         #compute interaction matrix
         L = vs.interactionMatrixFeaturePoint2DList(current_points_meter, np.array([1]))
         
         #compute velocity
         vcam_vs = -lambda_vs * np.linalg.pinv(L).dot(error_vs)
     
-       #print("velocity in camera frame",  vcam   ) 
+        #print("velocity in camera frame",  vcam   ) 
         ## robot                 camera 
         ##                    |
         ##    ------> x       |  -----> z
@@ -156,7 +158,7 @@ def trackercallback(data):
         if (set_mode[2]):
             print("launch the control")
             # Extract cmd_vel message
-            # FIXME be carreful of the sign 
+            # FIXME be carreful of the sign it depends on your robot 
             roll_left_right = mapValueScalSat(vel.angular.x)
             yaw_left_right = mapValueScalSat(-vel.angular.z)
             ascend_descend = mapValueScalSat(vel.linear.z)
