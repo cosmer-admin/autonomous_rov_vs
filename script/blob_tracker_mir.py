@@ -287,7 +287,7 @@ if __name__ == '__main__':
 
     rospy.init_node('blob_tracker_mir', anonymous=False)  
     
-    print 'tracker launched'
+    print ('tracker launched')
     
     pub_tracked_point = rospy.Publisher("tracked_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)
     pub_desired_point = rospy.Publisher("desired_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)

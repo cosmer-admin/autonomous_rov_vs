@@ -172,7 +172,7 @@ def trackercallback(data):
 
     
 def desiredpointscallback(data):
-   # print "desired point callback"
+   # print( "desired point callback")
     global desired_points_vs
     desired_points_vs = data.data
     
@@ -225,7 +225,7 @@ def joyCallback(data):
 def armDisarm(armed):
     # This functions sends a long command service with 400 code to arm or disarm motors
     if (armed):
-        print "Armed wait for service mavros/cmd/command"
+        print ("Armed wait for service mavros/cmd/command")
         rospy.wait_for_service('mavros/cmd/command')
         try:
             armService = rospy.ServiceProxy('mavros/cmd/command', CommandLong)
