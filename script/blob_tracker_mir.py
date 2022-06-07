@@ -26,7 +26,8 @@ from geometry_msgs.msg import Twist
 ###---- Visual Tracking and Servoing----
 from sensor_msgs.msg import CompressedImage
 import cv2
-from Point2D import Point2D
+import camera_parameters as cam
+import copy
 
 
 import time
@@ -52,14 +53,6 @@ reset_previous_points = True
 desired_points = []
 flag_alert = False
 
-#camera parameters
-u0 = 341
-v0 = 258
-lx = 455
-ly = 455
-kud =0.00683 
-kdu = -0.01424 
-
 
 def order_point(previous_pts, current_pts):
     
@@ -73,27 +66,9 @@ def order_point(previous_pts, current_pts):
         
     return ordered_pts
 
-
-def convert2meter(pt,u0,v0,lx,ly):
-    return (pt[0]-u0)/lx, (pt[1]-v0)/ly
-    
-
-
-global desired_points2D
-#defined desired points 
-desired_points2D = [Point2D(-0.243369710525,-0.418902983183),
-                  Point2D(-0.0143862444929,-0.429675544624),
-                  Point2D(-0.096243540171,-0.352463371199),
-                  Point2D(-0.237090345635,-0.291995145385),
-                  Point2D(-0.156886982784,-0.189359449174),
-                  Point2D(-0.00989097068426,-0.148452126201),
-                  Point2D(-0.00165708972955,-0.0341907266445),
-                  Point2D(-0.224742039631,-0.0227008870907)]
     
 vcam_vs = np.array([0,0,0,0,0,0])
 lambda_vs = 0.5
-
-
 set_mode = [0]*3
 Vmax_mot = 1900
 Vmin_mot = 1100
@@ -129,8 +104,6 @@ p = 0               # angular roll velocity
 q = 0               # angular pitch velocity 
 r = 0               # angular heave velocity 
 
-
-
 def overlay_points(image,points,r,g,b,scale =0.5,offsetx=5, offsety=5):
     index=1
     for pt in points:
@@ -142,18 +115,13 @@ def overlay_points(image,points,r,g,b,scale =0.5,offsetx=5, offsety=5):
         cv2.putText(image,text,position,
                     cv2.FONT_HERSHEY_SIMPLEX, scale,(b, g, r, 255),1)
         index+=1
-    
-
 
 def cameracallback(image_data):
-    
-    
     global n_points
     global reset_desired_points
     global desired_points
     global flag_alert
 
-    
     # get image data
     np_arr = np.fromstring(image_data.data, np.uint8)
     image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -177,9 +145,6 @@ def cameracallback(image_data):
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255, 255, 255, 255),1)
     
     
-
-    
-    
     # build the 2D points
     current_points = []
     global u0,v0,lx,ly
@@ -188,18 +153,16 @@ def cameracallback(image_data):
         pt = keypoint.pt[0],keypoint.pt[1]
         current_points.append([pt[0],pt[1]]);
 
-
     global reset_previous_points
     global previous_points
     
     # treat specifically first iteration
     if(reset_previous_points):
-        previous_points = current_points
-        desired_points = current_points
+        previous_points = copy.deepcopy(current_points)
+        desired_points = copy.deepcopy(current_points)
         reset_previous_points = False
         flag_alert = False
         print ("previous_points updated")
-    
     
     # order_point
     ordered_points = order_point(np.array(previous_points), np.array(current_points))
@@ -239,7 +202,7 @@ def cameracallback(image_data):
     
     #update the previous points
     #print(ordered_points)
-    previous_points = ordered_points
+    previous_points = copy.deepcopy(ordered_points)
     
     #publish points
     ordered_points_reshaped = np.array(ordered_points).reshape(-1)
