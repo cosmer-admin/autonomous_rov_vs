@@ -107,6 +107,7 @@ def trackercallback(data):
         desired_points_meter = cam.convertListPoint2meter (desired_points_vs)
         
         #compute vs error
+        error_vs = np.zeros((1,16))
         # error_vs = ......
        
         #compute interaction matrix in the FILE ./visual_servoig.py
@@ -149,7 +150,6 @@ def trackercallback(data):
         pub_visual_servoing_vel.publish(vel)
         
         # publish the error
-        error_vs_reshaped = np.array(error_vs).reshape(1,16)
         error_vs_msg = Float64MultiArray(data = error_vs)
         pub_visual_servoing_err.publish(error_vs_msg)
         
