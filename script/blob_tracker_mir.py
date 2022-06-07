@@ -62,7 +62,7 @@ def order_point(previous_pts, current_pts):
             index = np.argmin(np.linalg.norm(current_pts - ppt, axis=1)) 
             ordered_pts.append(current_pts[index])
     else :
-        ordered_pts = previous_pts
+        ordered_pts = copy.deepcopy(previous_pts)
         
     return ordered_pts
 
