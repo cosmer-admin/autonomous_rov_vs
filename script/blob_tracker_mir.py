@@ -47,7 +47,7 @@ global desired_points
 global previous_points
 global flag_alert 
 
-n_points = 8
+n_points = 5
 reset_desired_points = True
 reset_previous_points = True
 desired_points = []
@@ -108,9 +108,9 @@ def overlay_points(image,points,r,g,b,scale =0.5,offsetx=5, offsety=5):
     index=1
     for pt in points:
         #display overlay
-        cv2.circle(image,(int(pt[0]),int(pt[1])),
+        cv2.circle(image,(int(pt[1]),int(pt[0])),
                    int(4*scale+1), (b,g,r),-1)
-        position = (int(pt[0])+offsetx,int(pt[1])+offsety)
+        position = (int(pt[1])+offsety,int(pt[0])+offsetx)
         text = "{0}" .format(index)
         cv2.putText(image,text,position,
                     cv2.FONT_HERSHEY_SIMPLEX, scale,(b, g, r, 255),1)
@@ -150,7 +150,7 @@ def cameracallback(image_data):
     global u0,v0,lx,ly
      
     for keypoint in keypoints:
-        pt = keypoint.pt[0],keypoint.pt[1]
+        pt = keypoint.pt[1],keypoint.pt[0]
         current_points.append([pt[0],pt[1]]);
 
     global reset_previous_points

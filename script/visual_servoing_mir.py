@@ -48,7 +48,7 @@ global n_points_vs
 
 vcam_vs = np.array([0,0,0,0,0,0])
 lambda_vs = 0.5
-n_points_vs = 8
+n_points_vs = 5
 desired_points_vs = []
 enable_vs = 0   
 
@@ -102,6 +102,7 @@ def trackercallback(data):
     # then we can compute control law
     if(len(current_points)>0 and 
        len(desired_points_vs) == len(current_points)):
+        print("Asservissement visuel")
         
         #convert points to meters
         current_points_meter = cam.convertListPoint2meter (current_points)
@@ -151,12 +152,12 @@ def trackercallback(data):
         pub_visual_servoing_vel.publish(vel)
         
         # publish the error
-        error_vs_reshaped = np.array(error_vs).reshape(1,16)
+        error_vs_reshaped = np.array(error_vs).reshape(1,n_points_vs*2)
         error_vs_msg = Float64MultiArray(data = error_vs)
         pub_visual_servoing_err.publish(error_vs_msg)
         
         if (set_mode[2]):
-            print("A = launch the control")
+            print("Set mode to 2 to launch the control")
             # Extract cmd_vel message
             # FIXME be carreful of the sign it depends on your robot 
             roll_left_right = mapValueScalSat(vel.angular.x)
