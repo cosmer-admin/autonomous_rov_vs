@@ -133,7 +133,7 @@ def cameracallback(image_data):
     keypoints = detector.detect(image_np)
     blank = np.zeros((1, 1))
     blobs = cv2.drawKeypoints(image_np, keypoints, blank, (0, 0, 255),cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    
+      
     #display info
     position = (10,30)
     text = "LEFT click on the image : reset current tracked and desired points. " 
@@ -207,6 +207,19 @@ def cameracallback(image_data):
     #publish points
     ordered_points_reshaped = np.array(ordered_points).reshape(-1)
     current_point_msg = Float64MultiArray(data = ordered_points_reshaped)
+        
+    cv2.namedWindow("image")
+    # cv2 mouse
+    cv2.setMouseCallback("image", click_detect)
+    cv2.imshow("image", blobs)
+    
+    
+    #update the previous points
+    #print(ordered_points)
+    previous_points = copy.deepcopy(ordered_points)
+    
+    #publish points
+    ordered_points_reshaped = np.array(ordered_points).reshape(-1)
     
 
     #rospy.loginfo(current_point_msg)
@@ -247,17 +260,20 @@ def subscriber():
 
 
 if __name__ == '__main__':
-    global nb_points_vs
-
+    
     rospy.init_node('blob_tracker_mir', anonymous=False)  
-    
     print ('tracker launched')
-    
+    global nb_points_vs
     if rospy.has_param('~points'):
         nb_points_vs = rospy.get_param('~points')
         print "target with", nb_points_vs, "  points"
     else:
-        rospy.logwarn('no parameter given; using the default value %d' %points)
+        rospy.logwarn('no parameter given; using the default value %d' %nb_points_vs)
+
+
+    
+    
+
     
     pub_tracked_point = rospy.Publisher("tracked_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)
     pub_desired_point = rospy.Publisher("desired_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)

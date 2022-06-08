@@ -22,7 +22,6 @@ from sensor_msgs.msg import LaserScan
 from mavros_msgs.srv import CommandLong
 from geometry_msgs.msg import Twist
 
-
 ###---- Visual Tracking and Servoing----
 from transform import velocityTwistMatrix
 from transform import homogenousMatrix
@@ -44,11 +43,11 @@ global depth_wrt_startup
 global desired_points_vs
 global vcam_vs
 global lambda_vs
-global n_points_vs
+global nb_points_vs
 
 vcam_vs = np.array([0,0,0,0,0,0])
 lambda_vs = 0.5
-n_points_vs = 5
+nb_points_vs = 5
 desired_points_vs = []
 enable_vs = 0   
 
@@ -92,7 +91,7 @@ r = 0               # angular heave velocity
 
 def trackercallback(data):
     global desired_points_vs
-    global n_points_vs
+    global nb_points_vs
     
     # read the current tracked point
     current_points = data.data
@@ -163,7 +162,7 @@ def trackercallback(data):
         pub_visual_servoing_vel_cam.publish(velcam)
         
         # publish the error
-       # error_vs_reshaped = np.array(error_vs).reshape(1,n_points_vs*2)
+        # error_vs_reshaped = np.array(error_vs).reshape(1,n_points_vs*2)
         error_vs_msg = Float64MultiArray(data = error_vs)
         pub_visual_servoing_err.publish(error_vs_msg)
         
@@ -479,6 +478,13 @@ def subscriber():
 
 
 if __name__ == '__main__':
+    
+    global nb_points_vs
+    if rospy.has_param('~points'):
+        nb_points_vs = rospy.get_param('~points')
+        print "target with", nb_points_vs, "  points"
+    else:
+        rospy.logwarn('no parameter given; using the default value %d' %nb_points_vs)
 
     armDisarm(False)  # Not automatically disarmed at startup
     rospy.init_node('visual_servoing_mir', anonymous=False)
