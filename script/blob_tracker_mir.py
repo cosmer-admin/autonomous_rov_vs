@@ -26,6 +26,9 @@ from geometry_msgs.msg import Twist
 ###---- Visual Tracking and Servoing----
 from sensor_msgs.msg import CompressedImage
 import cv2
+import camera_parameters as cam
+import copy
+
 
 
 import time
@@ -38,14 +41,14 @@ global enable_vs
 global init_p0
 global depth_p0
 global depth_wrt_startup
-global n_points
+global nb_points_vs
 global reset_desired_points
 global reset_previous_points
 global desired_points
 global previous_points
 global flag_alert 
 
-n_points = 8
+nb_points_vs = 5
 reset_desired_points = True
 reset_previous_points = True
 desired_points = []
@@ -60,15 +63,12 @@ def order_point(previous_pts, current_pts):
             index = np.argmin(np.linalg.norm(current_pts - ppt, axis=1)) 
             ordered_pts.append(current_pts[index])
     else :
-        ordered_pts = previous_pts
+        ordered_pts = copy.deepcopy(previous_pts)
         
     return ordered_pts
 
-
 vcam_vs = np.array([0,0,0,0,0,0])
 lambda_vs = 0.5
-
-
 set_mode = [0]*3
 Vmax_mot = 1900
 Vmin_mot = 1100
@@ -104,8 +104,6 @@ p = 0               # angular roll velocity
 q = 0               # angular pitch velocity 
 r = 0               # angular heave velocity 
 
-
-
 def overlay_points(image,points,r,g,b,scale =0.5,offsetx=5, offsety=5):
     index=1
     for pt in points:
@@ -117,18 +115,13 @@ def overlay_points(image,points,r,g,b,scale =0.5,offsetx=5, offsety=5):
         cv2.putText(image,text,position,
                     cv2.FONT_HERSHEY_SIMPLEX, scale,(b, g, r, 255),1)
         index+=1
-    
-
 
 def cameracallback(image_data):
-    
-    
-    global n_points
+    global nb_points_vs
     global reset_desired_points
     global desired_points
     global flag_alert
 
-    
     # get image data
     np_arr = np.fromstring(image_data.data, np.uint8)
     image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -152,9 +145,6 @@ def cameracallback(image_data):
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255, 255, 255, 255),1)
     
     
-
-    
-    
     # build the 2D points
     current_points = []
     global u0,v0,lx,ly
@@ -163,18 +153,16 @@ def cameracallback(image_data):
         pt = keypoint.pt[0],keypoint.pt[1]
         current_points.append([pt[0],pt[1]]);
 
-
     global reset_previous_points
     global previous_points
     
     # treat specifically first iteration
     if(reset_previous_points):
-        previous_points = current_points
-        desired_points = current_points
+        previous_points = copy.deepcopy(current_points)
+        desired_points = copy.deepcopy(current_points)
         reset_previous_points = False
         flag_alert = False
         print ("previous_points updated")
-    
     
     # order_point
     ordered_points = order_point(np.array(previous_points), np.array(current_points))
@@ -214,7 +202,7 @@ def cameracallback(image_data):
     
     #update the previous points
     #print(ordered_points)
-    previous_points = ordered_points
+    previous_points = copy.deepcopy(ordered_points)
     
     #publish points
     ordered_points_reshaped = np.array(ordered_points).reshape(-1)
@@ -223,10 +211,10 @@ def cameracallback(image_data):
 
     #rospy.loginfo(current_point_msg)
 
-    if(np.shape(ordered_points)[0] == n_points and flag_alert==False):
+    if(np.shape(ordered_points)[0] == nb_points_vs and flag_alert==False):
        # print "publish points"
         if(reset_desired_points) : 
-            desired_points = ordered_points
+            desired_points = copy.deepcopy(ordered_points)
             reset_desired_points = False
             print ("desired_points updated")
         pub_tracked_point.publish(current_point_msg)
@@ -254,15 +242,22 @@ def click_detect(event,x, y, flags, param):
 
 def subscriber():
     #camera
-    rospy.Subscriber("/br5/usb_cam/image_raw/compressed", CompressedImage, cameracallback,  queue_size = 1)
+    rospy.Subscriber("usb_cam/image_raw/compressed", CompressedImage, cameracallback,  queue_size = 1)
     rospy.spin()  # Execute subscriber in loop
 
 
 if __name__ == '__main__':
+    global nb_points_vs
 
     rospy.init_node('blob_tracker_mir', anonymous=False)  
     
     print ('tracker launched')
+    
+    if rospy.has_param('~points'):
+        nb_points_vs = rospy.get_param('~points')
+        print "target with", nb_points_vs, "  points"
+    else:
+        rospy.logwarn('no parameter given; using the default value %d' %points)
     
     pub_tracked_point = rospy.Publisher("tracked_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)
     pub_desired_point = rospy.Publisher("desired_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)

@@ -48,7 +48,7 @@ global n_points_vs
 
 vcam_vs = np.array([0,0,0,0,0,0])
 lambda_vs = 0.5
-n_points_vs = 8
+n_points_vs = 5
 desired_points_vs = []
 enable_vs = 0   
 
@@ -101,6 +101,7 @@ def trackercallback(data):
     # then we can compute control law
     if(len(current_points)>0 and 
        len(desired_points_vs) == len(current_points)):
+        print("Asservissement visuel")
         
         #convert points from pixels to meters
         current_points_meter = cam.convertListPoint2meter (current_points)
@@ -146,16 +147,29 @@ def trackercallback(data):
         vel.linear.x = vrobot[0]
         vel.linear.y = vrobot[1]
         vel.linear.z = vrobot[2]
+
+        
+        velcam = Twist()
+        velcam.angular.x = vcam_vs[3]
+        velcam.angular.y = vcam_vs[4]
+        velcam.angular.z = vcam_vs[5]
+        velcam.linear.x = vcam_vs[0]
+        velcam.linear.y = vcam_vs[1]
+        velcam.linear.z = vcam_vs[2]
+        
+        
         # publish the visual servoing velocity
-        pub_visual_servoing_vel.publish(vel)
+        pub_visual_servoing_vel_rob.publish(vel)
+        pub_visual_servoing_vel_cam.publish(velcam)
         
         # publish the error
+       # error_vs_reshaped = np.array(error_vs).reshape(1,n_points_vs*2)
         error_vs_msg = Float64MultiArray(data = error_vs)
         pub_visual_servoing_err.publish(error_vs_msg)
         
         print("press A to launch the visual servoing control")
         if (set_mode[2]):
-           
+            print("Set mode to 2 to launch the control")
             # Extract cmd_vel message
             # FIXME be carreful of the sign may depends on your robot 
             roll_left_right = mapValueScalSat(vel.angular.x)
@@ -474,7 +488,8 @@ if __name__ == '__main__':
     pub_angle_degre = rospy.Publisher('angle_degree', Twist, queue_size = 10, tcp_nodelay = True)
     pub_depth = rospy.Publisher('depth/state`', Float64, queue_size = 10, tcp_nodelay = True)
     
-    pub_visual_servoing_vel = rospy.Publisher('visual_servoing_velocity', Twist, queue_size = 10, tcp_nodelay = True)
+    pub_visual_servoing_vel_rob = rospy.Publisher('visual_servoing_velocity_rob', Twist, queue_size = 10, tcp_nodelay = True)
+    pub_visual_servoing_vel_cam = rospy.Publisher('visual_servoing_velocity_cam', Twist, queue_size = 10, tcp_nodelay = True)
     pub_visual_servoing_err = rospy.Publisher("visual_servoing_error",Float64MultiArray,queue_size=1,tcp_nodelay = True)
     
     pub_angular_velocity = rospy.Publisher('angular_velocity', Twist, queue_size = 10, tcp_nodelay = True)

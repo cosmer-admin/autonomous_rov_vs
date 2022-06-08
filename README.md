@@ -55,6 +55,7 @@ export ROS_IP=127.0.0.1
 ```
   cd ~/catkin_w/src/autonomous_rov/bags
   rosbag play -l  testtracking.bag
+<<<<<<< HEAD
 ```
 
 3. open a terminal and run a roscore
@@ -68,6 +69,18 @@ export ROS_IP=127.0.0.1
    roslaunch autonomous_rov run_visual_servoing.launch
 ```
 
+=======
+  ```
+  
+3. open a terminal and run a roscore
+```
+   roslaunch autonomous_rov run_visual_servoing.launch
+```
+4. open another terminal and run the launch file
+```
+   roslaunch autonomous_rov run_visual_servoing.launch
+ ````
+>>>>>>> origin/claire/controlrobot
 5. look at the topic : you should see two new topics : 
   - /br5/tracked_points of type std_msgs/Float64MultiArray
   - /br5/desired_points of type std_msgs/Float64MultiArray
@@ -105,12 +118,21 @@ Change Line 11 with your rov number. Replace br5 with br1 , br2 , br3 or br4 ...
 ```
 4. open a terminal and run a roscore
 ```
+<<<<<<< HEAD
    roslaunch autonomous_rov run_visual_servoing.launch
 ```
 5. open another terminal and run the launch file
 ```
    roslaunch autonomous_rov run_visual_servoing.launch
 ```
+=======
+   roslaunch autonomous_rov run_visual_servoing.launch
+```
+5. open another terminal and run the launch file
+```
+   roslaunch autonomous_rov run_visual_servoing.launch
+```
+>>>>>>> origin/claire/controlrobot
 6. look at the topic : you should see two new topics : 
   - /br5/tracked_points of type std_msgs/Float64MultiArray
   - /br5/desired_points of  type std_msgs/Float64MultiArray
