@@ -148,8 +148,18 @@ def trackercallback(data):
         vel.linear.y = vrobot[1]
         vel.linear.z = vrobot[2]
         
-        # publish the visual servoing celovity
-        pub_visual_servoing_vel.publish(vel)
+        velcam = Twist()
+        velcam.angular.x = vcam_vs[3]
+        velcam.angular.y = vcam_vs[4]
+        velcam.angular.z = vcam_vs[5]
+        velcam.linear.x = vcam_vs[0]
+        velcam.linear.y = vcam_vs[1]
+        velcam.linear.z = vcam_vs[2]
+        
+        
+        # publish the visual servoing velocity
+        pub_visual_servoing_vel_rob.publish(vel)
+        pub_visual_servoing_vel_cam.publish(velcam)
         
         # publish the error
         error_vs_reshaped = np.array(error_vs).reshape(1,n_points_vs*2)
@@ -476,7 +486,8 @@ if __name__ == '__main__':
     pub_angle_degre = rospy.Publisher('angle_degree', Twist, queue_size = 10, tcp_nodelay = True)
     pub_depth = rospy.Publisher('depth/state', Float64, queue_size = 10, tcp_nodelay = True)
     
-    pub_visual_servoing_vel = rospy.Publisher('visual_servoing_velocity', Twist, queue_size = 10, tcp_nodelay = True)
+    pub_visual_servoing_vel_rob = rospy.Publisher('visual_servoing_velocity_rob', Twist, queue_size = 10, tcp_nodelay = True)
+    pub_visual_servoing_vel_cam = rospy.Publisher('visual_servoing_velocity_cam', Twist, queue_size = 10, tcp_nodelay = True)
     pub_visual_servoing_err = rospy.Publisher("visual_servoing_error",Float64MultiArray,queue_size=1,tcp_nodelay = True)
     
     pub_angular_velocity = rospy.Publisher('angular_velocity', Twist, queue_size = 10, tcp_nodelay = True)
