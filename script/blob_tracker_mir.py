@@ -40,14 +40,14 @@ global enable_vs
 global init_p0
 global depth_p0
 global depth_wrt_startup
-global n_points
+global nb_points_vs
 global reset_desired_points
 global reset_previous_points
 global desired_points
 global previous_points
 global flag_alert 
 
-n_points = 5
+nb_points_vs = 5
 reset_desired_points = True
 reset_previous_points = True
 desired_points = []
@@ -117,7 +117,7 @@ def overlay_points(image,points,r,g,b,scale =0.5,offsetx=5, offsety=5):
         index+=1
 
 def cameracallback(image_data):
-    global n_points
+    global nb_points_vs
     global reset_desired_points
     global desired_points
     global flag_alert
@@ -211,10 +211,10 @@ def cameracallback(image_data):
 
     #rospy.loginfo(current_point_msg)
 
-    if(np.shape(ordered_points)[0] == n_points and flag_alert==False):
+    if(np.shape(ordered_points)[0] == nb_points_vs and flag_alert==False):
        # print "publish points"
         if(reset_desired_points) : 
-            desired_points = ordered_points
+            desired_points = copy.deepcopy(ordered_points)
             reset_desired_points = False
             print ("desired_points updated")
         pub_tracked_point.publish(current_point_msg)
@@ -242,15 +242,22 @@ def click_detect(event,x, y, flags, param):
 
 def subscriber():
     #camera
-    rospy.Subscriber("/br5/usb_cam/image_raw/compressed", CompressedImage, cameracallback,  queue_size = 1)
+    rospy.Subscriber("usb_cam/image_raw/compressed", CompressedImage, cameracallback,  queue_size = 1)
     rospy.spin()  # Execute subscriber in loop
 
 
 if __name__ == '__main__':
+    global nb_points_vs
 
     rospy.init_node('blob_tracker_mir', anonymous=False)  
     
     print 'tracker launched'
+    
+    if rospy.has_param('~points'):
+        nb_points_vs = rospy.get_param('~points')
+        print "target with", nb_points_vs, "  points"
+    else:
+        rospy.logwarn('no parameter given; using the default value %d' %points)
     
     pub_tracked_point = rospy.Publisher("tracked_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)
     pub_desired_point = rospy.Publisher("desired_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)
