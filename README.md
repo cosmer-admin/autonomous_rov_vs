@@ -58,11 +58,11 @@ export ROS_IP=127.0.0.1
   
 3. open a terminal and run a roscore
 ```
-   roslaunch autonomous_rov run_visual_servoing.launch
+   roscore
 ```
 4. open another terminal and run the launch file
 ```
-   roslaunch autonomous_rov run_visual_servoing.launch
+   roslaunch autonomous_rov run_visual_servoing.launch npoints:=5
  ````
 5. look at the topic : you should see two new topics : 
   - /br5/tracked_points of type std_msgs/Float64MultiArray
@@ -101,11 +101,11 @@ Change Line 11 with your rov number. Replace br5 with br1 , br2 , br3 or br4 ...
 ```
 4. open a terminal and run a roscore
 ```
-   roslaunch autonomous_rov run_visual_servoing.launch
+   roscore
 ```
-5. open another terminal and run the launch file
+5. open another terminal and run the launch file with number of points as an option
 ```
-   roslaunch autonomous_rov run_visual_servoing.launch
+   roslaunch autonomous_rov run_visual_servoing.launch npoints:=5
 ```
 6. look at the topic : you should see two new topics : 
   - /br5/tracked_points of type std_msgs/Float64MultiArray
