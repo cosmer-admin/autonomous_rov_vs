@@ -28,8 +28,6 @@ from sensor_msgs.msg import CompressedImage
 import cv2
 import camera_parameters as cam
 import copy
-
-
 import time
 import sys
 import argparse
@@ -210,7 +208,6 @@ def cameracallback(image_data):
     
 
     #rospy.loginfo(current_point_msg)
-
     if(np.shape(ordered_points)[0] == nb_points_vs and flag_alert==False):
        # print "publish points"
         if(reset_desired_points) : 
@@ -222,8 +219,6 @@ def cameracallback(image_data):
         desired_points_msg = Float64MultiArray(data = desired_points_reshaped)
         pub_desired_point.publish(desired_points_msg)
         
-
-    
     cv2.waitKey(2)
 
 def click_detect(event,x, y, flags, param):
@@ -247,7 +242,8 @@ def subscriber():
 
 
 if __name__ == '__main__':
-    global nb_points_vs
+    
+   # global nb_points_vs
 
     rospy.init_node('blob_tracker_mir', anonymous=False)  
     
@@ -257,7 +253,7 @@ if __name__ == '__main__':
         nb_points_vs = rospy.get_param('~points')
         print "target with", nb_points_vs, "  points"
     else:
-        rospy.logwarn('no parameter given; using the default value %d' %points)
+        rospy.logwarn('no parameter given; using the default value %d' %nb_points_vs)
     
     pub_tracked_point = rospy.Publisher("tracked_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)
     pub_desired_point = rospy.Publisher("desired_points",Float64MultiArray,queue_size=1,tcp_nodelay = True)

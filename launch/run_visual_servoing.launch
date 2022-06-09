@@ -33,7 +33,7 @@
         />  
     
      <arg 
-        name="points"
+        name="npoints"
         default="8"
         /> 
     
@@ -42,6 +42,9 @@
         type="blob_tracker_mir.py" 
         name="blob_tracker_mir" 
         output="screen" >
+        <param 
+            name="points" 
+            value="$(arg npoints)"/>
     </node>
     
     <node 
@@ -49,6 +52,9 @@
         type="visual_servoing_mir.py" 
         name="visual_servoing_mir" 
         output="screen" >
+        <param 
+            name="points" 
+            value="$(arg npoints)"/>
         </node> 
   </group>
 
