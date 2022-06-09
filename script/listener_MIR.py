@@ -137,14 +137,36 @@ def velCallback(cmd_vel):
     # Only continue if manual_mode is enabled
     if (set_mode[1] or set_mode[2]):
         return
+    
+    
+    print("WARNING HACK Joy uni directional")
+    
+    
+    #cmd_vel.angular.x = 0
+    #cmd_vel.angular.y = 0
+    #cmd_vel.angular.z = 0
+    #cmd_vel.linear.x = 0
+    #cmd_vel.linear.y = 0
+    #cmd_vel.linear.z = 0
+    
+    ## Extract cmd_vel message
 
-    # Extract cmd_vel message
-    roll_left_right = mapValueScalSat(cmd_vel.angular.x)
-    yaw_left_right = mapValueScalSat(-cmd_vel.angular.z)
-    ascend_descend = mapValueScalSat(cmd_vel.linear.z)
-    forward_reverse = mapValueScalSat(cmd_vel.linear.x)
+    # BR5
+    forward_reverse = mapValueScalSat(-cmd_vel.linear.x)
     lateral_left_right = mapValueScalSat(-cmd_vel.linear.y)
-    pitch_left_right = mapValueScalSat(cmd_vel.angular.y)
+    ascend_descend = mapValueScalSat(cmd_vel.linear.z)
+    roll_left_right = mapValueScalSat(-cmd_vel.angular.x)
+    pitch_left_right = mapValueScalSat(-cmd_vel.angular.y)
+    yaw_left_right = mapValueScalSat(-cmd_vel.angular.z)
+    
+
+    
+    #roll_left_right = mapValueScalSat(cmd_vel.angular.x)
+    #yaw_left_right = mapValueScalSat(-cmd_vel.angular.z)
+    #ascend_descend = mapValueScalSat(cmd_vel.linear.z)
+    #forward_reverse = mapValueScalSat(cmd_vel.linear.x)
+    #lateral_left_right = mapValueScalSat(-cmd_vel.linear.y)
+    #pitch_left_right = mapValueScalSat(cmd_vel.angular.y)
 
     setOverrideRCIN(pitch_left_right, roll_left_right, ascend_descend,
                     yaw_left_right, forward_reverse, lateral_left_right)

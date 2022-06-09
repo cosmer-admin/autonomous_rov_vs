@@ -47,7 +47,7 @@ global lambda_vs
 global nb_points_vs
 
 vcam_vs = np.array([0,0,0,0,0,0])
-lambda_vs = 0.5
+lambda_vs = 0.4
 nb_points_vs = 5
 desired_points_vs = []
 enable_vs = 0   
@@ -74,7 +74,7 @@ set_mode[0] = True   # Mode manual
 set_mode[1] = False  # Mode automatic without correction
 set_mode[2] = False  # Mode with correction
 
-enable_depth = False 
+enable_depth = True 
 enable_ping = False 
 pinger_confidence = 0
 pinger_distance = 0
@@ -149,37 +149,50 @@ def trackercallback(data):
         vel.linear.z = vrobot[2]
         
         velcam = Twist()
-        velcam.angular.x = vcam_vs[3]
-        velcam.angular.y = vcam_vs[4]
-        velcam.angular.z = vcam_vs[5]
         velcam.linear.x = vcam_vs[0]
         velcam.linear.y = vcam_vs[1]
         velcam.linear.z = vcam_vs[2]
+        velcam.angular.x = vcam_vs[3]
+        velcam.angular.y = vcam_vs[4]
+        velcam.angular.z = vcam_vs[5]
         
         
         # publish the visual servoing velocity
         pub_visual_servoing_vel_rob.publish(vel)
         pub_visual_servoing_vel_cam.publish(velcam)
         
+        
+        vel.angular.x = 0#vrobot[3]
+        vel.angular.y = 0#vrobot[4]
+        vel.angular.z = 0.0#vrobot[5]
+        vel.linear.x += 0.0
+        vel.linear.y += 0.0
+        vel.linear.z += 0.12 
+        
+        
         # publish the error
-        error_vs_reshaped = np.array(error_vs).reshape(1,nb_points_vs*2)
+        #error_vs_reshaped = np.array(error_vs).reshape(1,nb_points_vs*2)
         error_vs_msg = Float64MultiArray(data = error_vs)
         pub_visual_servoing_err.publish(error_vs_msg)
+        error_norm_msg = Float64(data = np.linalg.norm(error_vs))
+        pub_visual_servoing_err_norm.publish(error_norm_msg)
         
+        print("Set mode to 2 to launch the control")
         if (set_mode[2]):
-            print("Set mode to 2 to launch the control")
+            print("Mode 2 to launched visual servo control on")
             # Extract cmd_vel message
             # FIXME be carreful of the sign it depends on your robot 
-            roll_left_right = mapValueScalSat(vel.angular.x)
+            roll_left_right = mapValueScalSat(-vel.angular.x)
+            pitch_left_right = mapValueScalSat(-vel.angular.y)
             yaw_left_right = mapValueScalSat(-vel.angular.z)
-            ascend_descend = mapValueScalSat(vel.linear.z)
-            forward_reverse = mapValueScalSat(vel.linear.x)
+            
+            forward_reverse = mapValueScalSat(-vel.linear.x)
             lateral_left_right = mapValueScalSat(-vel.linear.y)
-            pitch_left_right = mapValueScalSat(vel.angular.y)
+            ascend_descend = mapValueScalSat(vel.linear.z)
 
+    
             setOverrideRCIN(pitch_left_right, roll_left_right, ascend_descend,
                     yaw_left_right, forward_reverse, lateral_left_right)
-    
 
 
     
@@ -265,7 +278,7 @@ def velCallback(cmd_vel):
     # Extract cmd_vel message
     roll_left_right = mapValueScalSat(cmd_vel.angular.x)
     yaw_left_right = mapValueScalSat(-cmd_vel.angular.z)
-    ascend_descend = mapValueScalSat(cmd_vel.linear.z)
+    ascend_descend = mapValueScalSat(cmd_vel.linear.z+0.12)
     forward_reverse = mapValueScalSat(cmd_vel.linear.x)
     lateral_left_right = mapValueScalSat(-cmd_vel.linear.y)
     pitch_left_right = mapValueScalSat(cmd_vel.angular.y)
@@ -403,7 +416,7 @@ def PressureCallback(data):
         # Only continue if automatic_mode is enabled
         # Define an arbitrary velocity command and observe robot's velocity
         #setOverrideRCIN ( Pitch , Roll , Heave , Yaw ,Surge, Sway)
-        setOverrideRCIN(1500, 1500, 1500, 1500, 1700, 1500)
+        #setOverrideRCIN(1500, 1500, 1500, 1500, 1700, 1500)
         return
 
 
@@ -491,7 +504,7 @@ if __name__ == '__main__':
     pub_msg_override = rospy.Publisher("mavros/rc/override", OverrideRCIn, queue_size = 10, tcp_nodelay = True)
     pub_angle_degre = rospy.Publisher('angle_degree', Twist, queue_size = 10, tcp_nodelay = True)
     pub_depth = rospy.Publisher('depth/state', Float64, queue_size = 10, tcp_nodelay = True)
-    
+    pub_visual_servoing_err_norm = rospy.Publisher('visual_servoing_err_norm', Float64, queue_size = 10, tcp_nodelay = True)
     pub_visual_servoing_vel_rob = rospy.Publisher('visual_servoing_velocity_rob', Twist, queue_size = 10, tcp_nodelay = True)
     pub_visual_servoing_vel_cam = rospy.Publisher('visual_servoing_velocity_cam', Twist, queue_size = 10, tcp_nodelay = True)
     pub_visual_servoing_err = rospy.Publisher("visual_servoing_error",Float64MultiArray,queue_size=1,tcp_nodelay = True)

@@ -179,7 +179,7 @@ def cameracallback(image_data):
         cv2.putText(blobs,text,position,
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5,(255, 255, 255, 255),1)
 
-    if( np.linalg.norm(np.array(previous_points)-np.array(ordered_points)) > 80):
+    if( np.linalg.norm(np.array(previous_points)-np.array(ordered_points)) > 800):
         flag_alert = True
         
     if (flag_alert == True ):
@@ -208,7 +208,7 @@ def cameracallback(image_data):
     
 
     #rospy.loginfo(current_point_msg)
-    if(np.shape(ordered_points)[0] == nb_points_vs and flag_alert==False):
+    if(flag_alert==False):
        # print "publish points"
         if(reset_desired_points) : 
             desired_points = copy.deepcopy(ordered_points)
