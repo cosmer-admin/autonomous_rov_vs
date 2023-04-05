@@ -31,7 +31,7 @@ clone the repo :
   git clone https://github.com/cosmer-admin/autonomous_rov.git
   ```
 When you git clone, git fetch, git pull, or git push to a remote repository using HTTPS URLs on the command line, Git will ask for your GitHub username and password. When Git prompts you for your password, enter your personal access token. Alternatively, you can use a credential helper like Git Credential Manager. Password-based authentication for Git has been removed in favor of more secure authentication methods. For more information, see "Creating a personal access token."
-
+see https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories#cloning-with-https-urls
 
 source your catkin workspace : 
   ```
