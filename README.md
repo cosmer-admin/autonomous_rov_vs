@@ -4,7 +4,7 @@ code for marine mecatronics class Master Mir
 ## Visual servoing code
 
 The visual servoing class will be based on two steps :
-* visual blob tracking to ge 2D points position 
+* visual blob tracking to get 2D points position 
 * visual servoing
 
 ### Install 
